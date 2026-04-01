@@ -1,43 +1,48 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# --- DEPS & BUILD ---
 node_modules/
-
-# Expo
 .expo/
 dist/
 web-build/
-expo-env.d.ts
+package-lock.json
+yarn.lock
+build/
 
-# Native
-.kotlin/
-*.orig.*
+# --- NATIVE & MOBILE ---
+/ios
+/android
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.orig.*
+*.pem
+expo-env.d.ts
 
-# Metro
+# --- METRO & CACHE ---
+.metro-cache/
 .metro-health-check*
+.tsbuildinfo
 
-# debug
+# --- DEBUG & LOGS ---
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+firebase-debug.log
+*.log
 
-# macOS
+# --- ENVIRONMENT & SECRETS ---
+.env
+.env.local
+.env.*.local
+*.firebase.json
+credential.json
+
+# --- SYSTEM FILES ---
 .DS_Store
-*.pem
+Thumbs.db
+desktop.ini
 
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-app-example
-
-# generated native folders
-/ios
-/android
+# --- PROJECT SPECIFIC ---
+# Remove the line below if you WANT to upload the example folder
+app-example/
