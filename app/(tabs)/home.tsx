@@ -11,7 +11,7 @@ export default function HomeScreen() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      router.replace("/"); // Send them back to the gatekeeper
+      router.replace('/auth' as any);
     } catch (error) {
       console.error("Error signing out", error);
     }

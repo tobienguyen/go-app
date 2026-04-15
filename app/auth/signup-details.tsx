@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { auth } from "../config/firebaseConfig"; // Double check: is your config folder next to the app folder?
+import { auth } from "../../config/firebaseConfig"; // Double check: is your config folder next to the app folder?
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function SignupDetails() {
@@ -26,7 +26,7 @@ export default function SignupDetails() {
       
       // 2. SUCCESS! Send them to the main app
       // In the future, we will save 'name' and 'skillLevel' to Firestore here
-      router.replace("/(tabs)/home");
+      router.replace('/(tabs)' as any);
       
     } catch (error: any) {
       Alert.alert("Signup Failed", error.message);

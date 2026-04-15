@@ -11,7 +11,7 @@ export default function Login() {
   const handleLogin = () => {
     // This will eventually check Firebase for the user
     console.log("Logging in:", email);
-    router.replace("/(tabs)/home"); 
+    router.replace('/(tabs)' as any);
   };
 
   return (
@@ -79,7 +79,7 @@ export default function Login() {
         </View>
 
         {/* 7. Toggle back to Sign Up */}
-        <TouchableOpacity onPress={() => router.push("/")} style={styles.signUpLinkContainer}>
+        <TouchableOpacity onPress={() => router.push('/auth' as any)} style={styles.signUpLinkContainer}>
           <Text style={styles.signUpText}>
             New here? <Text style={styles.signUpSubLink}>Create an account</Text>
           </Text>
