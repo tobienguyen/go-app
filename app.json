@@ -9,7 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "bundleIdentifier": "com.goapp.volleyball",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Go! uses your camera to track your jump and touch height.",
+        "NSMicrophoneUsageDescription": "Go! records audio when you capture a session clip.",
+        "NSPhotoLibraryAddUsageDescription": "Go! saves your recorded clips to your photo library.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,14 +27,39 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_IMAGES",
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Go! to use your location to show nearby sessions."
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -38,11 +71,35 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      "expo-web-browser",
+      "react-native-fast-tflite",
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Go! uses your camera to track your jump and touch height.",
+          "enableMicrophonePermission": true,
+          "microphonePermissionText": "Go! records audio when you capture a session clip."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Go! to save clips to your photo library.",
+          "savePhotosPermission": "Allow Go! to save clips to your photo library.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2f929a4f-10a7-4c89-b4ad-6d7302051557"
+      }
     }
   }
 }

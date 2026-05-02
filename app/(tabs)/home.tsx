@@ -20,7 +20,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>You're In!</Text>
+        <Text style={styles.title}>{"You're In!"}</Text>
         <Text style={styles.subtitle}>Welcome to the Go! Community</Text>
         
         <View style={styles.card}>

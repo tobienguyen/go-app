@@ -33,7 +33,7 @@ export default function TabLayout() {
         name="analyze"
         options={{
           title: 'Analyze',
-          tabBarIcon: ({ color }) => <Ionicons name="camera-outline" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="stats-chart-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen

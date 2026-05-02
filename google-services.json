@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "760211922089",
+    "project_id": "go-app-2743c",
+    "storage_bucket": "go-app-2743c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:760211922089:android:d14ac02412c81b202e5db8",
+        "android_client_info": {
+          "package_name": "go.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4Q1ORFXJfP5QmDE7RKH1FtF-bQPHasWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
