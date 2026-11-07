@@ -6,6 +6,7 @@ import {
 import { useRouter } from "expo-router";
 import { sendEmailVerification, reload, signOut } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
+import { ensureMyProfile } from "../../services/users";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function VerifyEmailScreen() {
@@ -21,12 +22,8 @@ export default function VerifyEmailScreen() {
       // Reload forces Firebase to re-fetch the latest emailVerified status
       await reload(user);
       if (user.emailVerified) {
-        // If profile setup was never completed, go there first
-        if (!user.displayName) {
-          router.replace("/auth/signup-details" as any);
-        } else {
-          router.replace("/(tabs)" as any);
-        }
+        await ensureMyProfile();
+        router.replace("/(tabs)" as any);
       } else {
         Alert.alert(
           "Not Verified Yet",
@@ -54,9 +51,9 @@ export default function VerifyEmailScreen() {
   };
 
   const handleSignOut = async () => {
-    // An email signup that never finished has a throwaway password nobody
-    // knows; delete it so this email can sign up again later.
-    const unfinished = user && !user.emailVerified && !user.displayName &&
+    // An email signup that was never verified is removed, so this email can
+    // sign up again later.
+    const unfinished = user && !user.emailVerified &&
       user.providerData.every(p => p.providerId === "password");
     if (unfinished) { try { await user.delete(); } catch {} }
     await signOut(auth);

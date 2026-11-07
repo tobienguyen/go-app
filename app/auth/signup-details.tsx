@@ -3,29 +3,29 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   SafeAreaView, Alert, ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { updateProfile, updatePassword } from "firebase/auth";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
-import { createUser } from "../../services/users";
+import { setPendingSkillLevel } from "../../services/users";
 
 const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", "Advanced", "Pro"];
 
 export default function SignupDetails() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
 
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [skillLevel, setSkillLevel] = useState("Beginner");
   const [loading, setLoading] = useState(false);
 
-  const handleFinishSetup = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert("Session Expired", "Please start over.");
+  // Step 2 of signup: the Firebase account is only created here, with the
+  // user's own password. They join GO!'s player list (Tiger) after verifying.
+  const handleCreateAccount = async () => {
+    if (!email) {
       router.replace("/auth" as any);
       return;
     }
-
     if (!name.trim()) {
       Alert.alert("Missing Info", "Please enter your name.");
       return;
@@ -37,31 +37,36 @@ export default function SignupDetails() {
 
     setLoading(true);
     try {
-      // Replace the temporary password with the one the user chose
-      await updatePassword(user, password);
-
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName: name.trim() });
-
-      await createUser(user.uid, {
-        name: name.trim(),
-        email: user.email ?? "",
-      });
-
-      router.replace("/(tabs)" as any);
+      setPendingSkillLevel(skillLevel);
+      try {
+        await sendEmailVerification(user);
+      } catch {
+        // The next screen has a "Resend link" button
+      }
+      router.replace({ pathname: "/auth/verify-first", params: { email } } as any);
     } catch (error: any) {
-      Alert.alert("Setup Failed", error.message ?? "Something went wrong.");
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert("You already have an account", "Log in with your password instead.");
+        router.replace({ pathname: "/auth/login", params: { email } } as any);
+      } else if (error.code === "auth/invalid-email") {
+        Alert.alert("Invalid Email", "Please go back and check your email address.");
+      } else if (error.code === "auth/weak-password") {
+        Alert.alert("Weak Password", "Try a longer password.");
+      } else {
+        Alert.alert("Couldn't create account", "Check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const user = auth.currentUser;
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Complete your profile</Text>
-        <Text style={styles.subtitle}>Signing up as {user?.email}</Text>
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>Signing up as {email}</Text>
       </View>
 
       <View style={styles.form}>
@@ -102,10 +107,10 @@ export default function SignupDetails() {
           You can change this anytime in your profile.
         </Text>
 
-        <TouchableOpacity style={styles.mainButton} onPress={handleFinishSetup} disabled={loading}>
+        <TouchableOpacity style={styles.mainButton} onPress={handleCreateAccount} disabled={loading}>
           {loading
             ? <ActivityIndicator color="#FFF" />
-            : <Text style={styles.mainButtonText}>Finish Setup</Text>
+            : <Text style={styles.mainButtonText}>Create Account</Text>
           }
         </TouchableOpacity>
       </View>

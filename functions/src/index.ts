@@ -262,12 +262,13 @@ const actions: Record<string, Handler> = {
 
   async createUser({ db, uid, data }) {
     const { rows } = await db.query(
-      `insert into users (id, name, email, photo_url) values ($1, $2, $3, $4)
+      `insert into users (id, name, email, photo_url, skill_level)
+       values ($1, $2, $3, $4, coalesce(nullif($5, ''), 'Beginner'))
        on conflict (id) do update set
          name = case when users.name = '' then excluded.name else users.name end,
          email = excluded.email
        returning *`,
-      [uid, str(data.name, 100), str(data.email, 200), str(data.photoURL, 1000)],
+      [uid, str(data.name, 100), str(data.email, 200), str(data.photoURL, 1000), str(data.skillLevel, 40)],
     );
     return toUser(rows[0]);
   },

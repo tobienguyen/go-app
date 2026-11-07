@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig'; // Ensure this path matches your file structure
+import { ensureMyProfile } from "../services/users";
 import 'react-native-reanimated';
 
 import { useColorScheme } from 'react-native';
@@ -43,24 +44,22 @@ export default function RootLayout() {
     if (!user && !inAuthGroup) {
       // Not logged in — send to gatekeeper
       router.replace('/auth' as any);
-    } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst) {
+    } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst && !onSignupDetails) {
       // Logged in but email not verified — hold at verify screen
       router.replace('/auth/verify-email' as any);
-    } else if (
-      user && user.emailVerified && !user.displayName &&
-      !isSocialUser && !onSignupDetails
-    ) {
-      // Email user verified but hasn't set up profile yet
-      router.replace('/auth/signup-details' as any);
-    } else if (
-      user && user.emailVerified &&
-      (user.displayName || isSocialUser) &&
-      inAuthGroup
-    ) {
+    } else if (user && (user.emailVerified || isSocialUser) && inAuthGroup && !onVerifyFirst && !onVerifyScreen) {
       // Fully set up and stuck on auth screens — let into the app
       router.replace('/(tabs)' as any);
     }
   }, [user, segments, initializing, router]);
+
+  // 3. Make sure every verified user is on GO!'s player list in Tiger
+  //    (covers logging in later, or verifying and then closing the app).
+  useEffect(() => {
+    if (!user) return;
+    const isSocial = user.providerData?.some(p => p.providerId !== 'password') ?? false;
+    if (user.emailVerified || isSocial) ensureMyProfile().catch(() => {});
+  }, [user]);
 
   // Show nothing (or a splash screen) while checking the login status
   if (initializing) return null;

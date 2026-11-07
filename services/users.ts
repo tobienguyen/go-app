@@ -1,5 +1,5 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../config/firebaseConfig";
+import { auth, storage } from "../config/firebaseConfig";
 import { callApi } from "./api";
 import { UserProfile } from "../types";
 
@@ -13,9 +13,32 @@ export function getUser(uid: string) {
 /** Creates the signed-in user's profile (the server uses the auth uid). */
 export async function createUser(
   _uid: string,
-  data: { name: string; email: string; photoURL?: string },
+  data: { name: string; email: string; photoURL?: string; skillLevel?: string },
 ): Promise<void> {
   await callApi("createUser", data);
+}
+
+// Skill level picked on the signup form, held until the email is verified.
+let pendingSkillLevel: string | undefined;
+export function setPendingSkillLevel(level: string) { pendingSkillLevel = level; }
+
+let ensuredUid: string | null = null;
+/**
+ * Adds the signed-in, verified user to GO!'s player list in Tiger (no-op if
+ * they're already there). Called after verification and on every app start.
+ */
+export async function ensureMyProfile(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || ensuredUid === user.uid) return;
+  const isSocial = user.providerData.some(p => p.providerId !== "password");
+  if (!user.emailVerified && !isSocial) return;
+  await createUser(user.uid, {
+    name: user.displayName || user.email?.split("@")[0] || "Player",
+    email: user.email ?? "",
+    photoURL: user.photoURL ?? "",
+    skillLevel: pendingSkillLevel,
+  });
+  ensuredUid = user.uid;
 }
 
 export async function updateUser(

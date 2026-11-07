@@ -77,9 +77,9 @@ export default function GatekeeperScreen() {
     }
 
     // Firebase's email enumeration protection hides whether an account
-    // exists, so we don't guess here. The verify screen tries to create the
+    // exists, so we don't guess here. The signup form tries to create the
     // account and sends returning users to login if the email is taken.
-    router.push({ pathname: "/auth/verify-first", params: { email: email.trim().toLowerCase() } } as any);
+    router.push({ pathname: "/auth/signup-details", params: { email: email.trim().toLowerCase() } } as any);
   };
 
   return (
