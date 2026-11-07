@@ -9,11 +9,7 @@ import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import {
-  collection, doc, serverTimestamp, Timestamp,
-  writeBatch, increment, getDoc,
-} from "firebase/firestore";
-import { auth, db } from "../config/firebaseConfig";
+import { createSession, localDateString } from "../services/sessions";
 
 const { height } = Dimensions.get("window");
 
@@ -45,8 +41,9 @@ const DATE_OPTIONS = buildDateOptions();
 
 type CourtType = "beach" | "grass" | "indoor";
 
+// Buffalo / UB, used until the user's location is known
 const DEFAULT_REGION = {
-  latitude: 34.0522, longitude: -118.3790,
+  latitude: 42.95, longitude: -78.82,
   latitudeDelta: 0.05, longitudeDelta: 0.05,
 };
 
@@ -63,6 +60,7 @@ function computeDuration(start: string, end: string): string {
   const diff = timeToMinutes(end) - timeToMinutes(start);
   if (diff <= 0) return "";
   const h = Math.floor(diff / 60), m = diff % 60;
+  if (h === 0) return `${m}m`;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
@@ -225,7 +223,6 @@ export default function CreateSessionScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const uid = auth.currentUser?.uid ?? "";
 
   const [pin, setPin]           = useState<{ latitude: number; longitude: number } | null>(null);
   const [address, setAddress]   = useState("");
@@ -301,45 +298,21 @@ export default function CreateSessionScreen() {
     if (!startTime || !endTime) { Alert.alert("Missing Time", "Please set a start and end time."); return; }
     if (!timeValid)    { Alert.alert("Invalid Time", "End time must be after start time."); return; }
 
-    const parsedPrice = parseFloat(price) || 0;
-    const sessionDate = Timestamp.fromDate(DATE_OPTIONS[dateIdx].date);
-    const durationStr = computeDuration(startTime, endTime);
-    const timeRange   = `${startTime} – ${endTime}`;
-
     setSubmitting(true);
     try {
-      const userSnap = await getDoc(doc(db, "users", uid));
-      const userData = userSnap.data();
-      const hostName = userData?.name || auth.currentUser?.email?.split("@")[0] || "Anonymous";
-      const hostInitials = hostName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-
-      const batch = writeBatch(db);
-
-      const sessionRef = doc(collection(db, "sessions"));
-      batch.set(sessionRef, {
-        hostId: uid, hostName, hostInitials,
-        title: title.trim(), description: description.trim(),
-        type: courtType, price: parsedPrice, skillLevel,
-        startTime, endTime, duration: durationStr, timeRange,
-        maxPlayers, spotsFilled: 0,
+      await createSession({
+        title: title.trim(),
+        description: description.trim(),
+        type: courtType,
+        price: parseFloat(price) || 0,
+        skillLevel,
+        date: localDateString(DATE_OPTIONS[dateIdx].date),
+        startTime,
+        endTime,
+        maxPlayers,
         coordinate: { latitude: pin.latitude, longitude: pin.longitude },
         address: address || "See map",
-        sessionDate, createdAt: serverTimestamp(), active: true,
       });
-
-      const postRef = doc(collection(db, "posts"));
-      batch.set(postRef, {
-        type: "session", authorId: uid, authorName: hostName, authorInitials: hostInitials,
-        authorPosition: userData?.positions?.[0] || userData?.experience || "Player",
-        content: title.trim(), likes: 0, likedBy: [], comments: 0,
-        createdAt: serverTimestamp(), sessionId: sessionRef.id,
-        sessionType: courtType, sessionLocation: address || "See map",
-        sessionPrice: parsedPrice, sessionSkillLevel: skillLevel,
-        sessionDuration: durationStr, sessionTimeRange: timeRange,
-      });
-
-      batch.update(doc(db, "users", uid), { sessionsHosted: increment(1) });
-      await batch.commit();
       router.replace("/(tabs)/map" as any);
     } catch (e: any) {
       Alert.alert("Error", "Could not create session. Try again.");

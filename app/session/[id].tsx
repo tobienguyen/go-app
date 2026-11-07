@@ -6,46 +6,48 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../config/firebaseConfig";
+import { auth } from "../../config/firebaseConfig";
+import { Session } from "../../types";
+import { getSession, joinSession, leaveSession } from "../../services/sessions";
+import { CourtPulseCard } from "../../components/court-pulse";
 
 const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏟️" };
-
-interface Session {
-  id: string;
-  hostId: string;
-  hostName: string;
-  title: string;
-  description?: string;
-  type: string;
-  price: number;
-  skillLevel: string;
-  duration: string;
-  maxPlayers: number;
-  spotsFilled: number;
-  coordinate: { latitude: number; longitude: number };
-  address: string;
-  sessionDate?: any;
-  createdAt: any;
-  active: boolean;
-}
 
 export default function SessionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [pulseKey, setPulseKey] = useState(0);
+  const uid = auth.currentUser?.uid ?? "";
 
   useEffect(() => {
     if (!id) return;
-    getDoc(doc(db, "sessions", id)).then(snap => {
-      if (snap.exists()) {
-        setSession({ id: snap.id, ...snap.data() } as Session);
-      }
-      setLoading(false);
-    });
+    getSession(id)
+      .then(s => setSession(s))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [id]);
+
+  const isHost = session?.hostId === uid;
+  const joined = !!session?.attendees?.includes(uid);
+
+  const handleJoinToggle = async () => {
+    if (!session || busy) return;
+    setBusy(true);
+    try {
+      const updated = joined ? await leaveSession(session.id) : await joinSession(session.id);
+      if (updated) setSession(updated);
+      setPulseKey(k => k + 1); // Court Pulse picks up the new event right away
+      if (!joined) Alert.alert("You're in! 🏐", "See you on the court.");
+    } catch (e: any) {
+      Alert.alert("Couldn't update", e?.message ?? "Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -150,9 +152,9 @@ export default function SessionDetailScreen() {
               <DetailRow
                 icon="calendar-outline"
                 label="Date"
-                value={session.sessionDate.toDate().toLocaleDateString("en-US", {
+                value={new Date(session.sessionDate).toLocaleDateString("en-US", {
                   weekday: "long", month: "long", day: "numeric",
-                })}
+                }) + (session.timeRange ? ` · ${session.timeRange}` : "")}
               />
             )}
             <DetailRow icon="location-outline" label="Location" value={session.address} />
@@ -165,6 +167,13 @@ export default function SessionDetailScreen() {
             <DetailRow icon="time-outline" label="Duration" value={session.duration} />
             <DetailRow icon="people-outline" label="Max Players" value={`${session.maxPlayers} players`} />
           </View>
+
+          {/* Court Pulse (Tiger continuous aggregate) */}
+          <CourtPulseCard
+            courtName={session.courtName ?? session.address}
+            color={typeColor}
+            refreshKey={pulseKey}
+          />
 
           {/* Description */}
           {session.description ? (
@@ -185,11 +194,21 @@ export default function SessionDetailScreen() {
           {session.price > 0 && <Text style={styles.footerPriceSub}>per person</Text>}
         </View>
         <TouchableOpacity
-          style={[styles.joinBtn, spotsLeft === 0 && styles.joinBtnFull]}
-          onPress={() => Alert.alert("Join Session", "Joining sessions coming soon!")}
-          disabled={spotsLeft === 0}
+          style={[
+            styles.joinBtn,
+            joined && styles.joinBtnJoined,
+            ((spotsLeft === 0 && !joined) || isHost) && styles.joinBtnFull,
+          ]}
+          onPress={handleJoinToggle}
+          disabled={busy || isHost || (spotsLeft === 0 && !joined)}
         >
-          <Text style={styles.joinBtnText}>{spotsLeft === 0 ? "Full" : "Join Session"}</Text>
+          {busy ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.joinBtnText}>
+              {isHost ? "You're hosting" : joined ? "Leave Session" : spotsLeft === 0 ? "Full" : "Join Session"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -273,5 +292,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   joinBtnFull: { backgroundColor: "#9CA3AF" },
+  joinBtnJoined: { backgroundColor: "#EF4444" },
   joinBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
 });

@@ -6,12 +6,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { auth } from "../../config/firebaseConfig";
 import { getUser, updateUser, uploadAvatar, uploadMediaItem, isLocalUri } from "../../services/users";
 import * as ImagePicker from "expo-image-picker";
 import { MediaItem, UserProfile, Post } from "../../types";
-import { db } from "../../config/firebaseConfig";
+import { getUserPosts } from "../../services/posts";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_W   = SCREEN_W - 32;
@@ -90,14 +89,7 @@ export default function ProfileScreen() {
 
   const loadPosts = async () => {
     try {
-      const q = query(
-        collection(db, "posts"),
-        where("authorId", "==", uid),
-        orderBy("createdAt", "desc"),
-        limit(5),
-      );
-      const snap = await getDocs(q);
-      setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Post)));
+      setPosts(await getUserPosts(uid!, 5));
     } catch {}
   };
 

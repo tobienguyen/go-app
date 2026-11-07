@@ -1,50 +1,33 @@
-# Welcome to your Expo app 👋
+# GO! 🏐
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Find and host pickup volleyball games (indoor, grass, and beach) on a live map.
 
-## Get started
+## How it's built
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+Expo app (React Native)
+   │  Firebase Auth token
+   ▼
+Cloud Function `api`  ──►  Gemini (Ask GO! search parsing)
+   │  SQL
+   ▼
+Tiger Cloud: PostgreSQL + TimescaleDB + PostGIS
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Tiger Cloud** stores all app data: players, games, attendees, posts, and the activity log.
+  - `session_events` is a **TimescaleDB hypertable**: every create, join, leave, and check-in.
+  - **Continuous aggregates** (real-time mode) roll that log up into **Court Pulse**
+    (busiest hours and days per court) and the **weekly leaderboard**.
+  - **PostGIS** powers "games near me" distance search.
+- **Gemini** turns plain-English requests ("free beach games tonight") into search filters; Tiger runs the search.
+- **Firebase** handles sign-in, photo/video storage, and hosts the API.
 
-## Learn more
+## Setup
 
-To learn more about developing your project with Expo, look at the following resources:
+1. **Database:** in the Tiger Cloud SQL editor, run `db/schema.sql`, then `db/seed.sql`
+   (demo data: 10 Buffalo-area courts, 24 players, 4 weeks of activity, relative to now).
+2. **Secrets:** `firebase functions:secrets:set TIGER_DATABASE_URL` and `firebase functions:secrets:set GEMINI_API_KEY`
+3. **API:** `cd functions && npm install && cd .. && firebase deploy --only functions` (requires the Blaze plan)
+4. **App:** `npm install && npx expo start`
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Re-run `db/seed.sql` any time for fresh upcoming games.

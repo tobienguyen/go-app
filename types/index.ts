@@ -16,7 +16,7 @@ export interface UserProfile {
   mediaItems: MediaItem[];
   sessionsHosted: number;
   sessionsAttended: number;
-  createdAt?: any;
+  createdAt?: string;
 }
 
 export interface Session {
@@ -37,9 +37,12 @@ export interface Session {
   attendees: string[];
   coordinate: { latitude: number; longitude: number };
   address: string;
-  sessionDate: any;
+  courtName?: string;
+  sessionDate: string;   // ISO start time
+  endsAt?: string;       // ISO end time
+  distanceKm?: number;   // set when the request included a location
   active: boolean;
-  createdAt: any;
+  createdAt: string;
 }
 
 export interface Post {
@@ -54,7 +57,7 @@ export interface Post {
   likes: number;
   likedBy: string[];
   comments: number;
-  createdAt: any;
+  createdAt: string;
   sessionId?: string;
   sessionType?: CourtType;
   sessionLocation?: string;

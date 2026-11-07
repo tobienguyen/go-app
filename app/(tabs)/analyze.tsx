@@ -160,6 +160,9 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
 
   const tfModel = useTensorflowModel(MOVENET_MODEL, []);
   const modelReady = tfModel.state === "loaded";
+  // The loaded model is a native HostObject that can be used directly inside
+  // the frame-processor worklet (pattern from the react-native-fast-tflite docs).
+  const model = tfModel.state === "loaded" ? tfModel.model : undefined;
 
   // NitroModules HybridObjects can't cross the worklets-core runtime boundary —
   // neither as closure deps (serializer throws) nor via SharedValue (setter throws).
@@ -242,13 +245,11 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
     setDebugInfo(prev => ({ ...prev, lastError: msg.slice(0, 80) }));
   }, []);
 
-  // modelShared (SharedValue) is safe in deps — its .value holds the HostObject
-  // reference, which worklets-core transfers cross-runtime without enumerating it.
   const frameProcessor = useFrameProcessor((frame) => {
     "worklet";
     noteWorkletFiringWC();
     if (isBusy.value) return;
-    const m = modelShared.value;
+    const m = model;
     if (!m) {
       logErrorWC("model is null in worklet");
       return;
@@ -272,7 +273,7 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
       logErrorWC(String(e?.message ?? e));
       isBusy.value = false;
     }
-  }, [modelShared, isBusy, facingShared, debugRotationShared, resize, updateKeypointsWC, noteWorkletFiringWC, logErrorWC]);
+  }, [model, isBusy, facingShared, debugRotationShared, resize, updateKeypointsWC, noteWorkletFiringWC, logErrorWC]);
 
   // ── Calibration ─────────────────────────────────────────────────────────────
   const captureCalibration = useCallback(() => {

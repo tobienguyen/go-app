@@ -7,13 +7,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import {
-  collection, query, orderBy, limit, onSnapshot,
-  addDoc, serverTimestamp, doc, getDoc, updateDoc,
-  arrayUnion, arrayRemove, increment,
-} from "firebase/firestore";
 import { useRouter } from "expo-router";
-import { auth, db, storage } from "../../config/firebaseConfig";
+import { auth, storage } from "../../config/firebaseConfig";
+import { getUser } from "../../services/users";
+import { subscribeFeed, createPost, toggleLike as toggleLikeApi } from "../../services/posts";
 
 const AVATAR_COLORS = ["#FF6B35", "#6C63FF", "#10B981", "#F59E0B", "#3B82F6", "#EF4444", "#8B5CF6", "#EC4899"];
 const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
@@ -25,9 +22,9 @@ function avatarColor(uid: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function timeAgo(ts: any): string {
-  if (!ts?.toDate) return "just now";
-  const diff = (Date.now() - ts.toDate().getTime()) / 1000;
+function timeAgo(ts: string | undefined): string {
+  if (!ts) return "just now";
+  const diff = (Date.now() - new Date(ts).getTime()) / 1000;
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -54,7 +51,7 @@ interface Post {
   likes: number;
   likedBy: string[];
   comments: number;
-  createdAt: any;
+  createdAt: string;
   sessionId?: string;
   sessionType?: string;
   sessionLocation?: string;
@@ -162,19 +159,16 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!uid) return;
-    getDoc(doc(db, "users", uid)).then(snap => {
-      if (snap.exists()) setMyProfile(snap.data() as MyProfile);
-    });
+    getUser(uid).then(p => {
+      if (p) setMyProfile({ name: p.name, positions: p.positions, experience: p.skillLevel });
+    }).catch(() => {});
   }, [uid]);
 
   useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(50));
-    const unsub = onSnapshot(q, snapshot => {
-      const loaded: Post[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Post));
-      setPosts(loaded);
+    return subscribeFeed(50, loaded => {
+      setPosts(loaded as Post[]);
       setFeedLoading(false);
-    });
-    return unsub;
+    }, () => setFeedLoading(false));
   }, []);
 
   const pickImage = useCallback(async () => {
@@ -198,28 +192,22 @@ export default function HomeScreen() {
     if (!draft.trim() && !draftImageUri) return;
     setPosting(true);
     try {
-      const name = myProfile?.name || email.split("@")[0];
-      const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-      const position = myProfile?.positions?.[0] || myProfile?.experience || "Player";
-
       let imageUrl: string | undefined;
       if (draftImageUri) {
         imageUrl = await uploadImage(draftImageUri, uid);
       }
 
-      await addDoc(collection(db, "posts"), {
-        type: "text",
-        authorId: uid,
-        authorName: name,
-        authorInitials: initials,
-        authorPosition: position,
-        content: draft.trim(),
-        ...(imageUrl ? { imageUrl } : {}),
-        likes: 0,
-        likedBy: [],
-        comments: 0,
-        createdAt: serverTimestamp(),
-      });
+      const content = draft.trim();
+      const { id } = await createPost({ content, imageUrl });
+      // Show the post right away instead of waiting for the next refresh
+      const name = myProfile?.name || email.split("@")[0];
+      setPosts(prev => [{
+        id, type: "text", authorId: uid, authorName: name,
+        authorInitials: name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2),
+        authorPosition: myProfile?.positions?.[0] || myProfile?.experience || "Player",
+        content, imageUrl, likes: 0, likedBy: [], comments: 0,
+        createdAt: new Date().toISOString(),
+      }, ...prev]);
       setDraft("");
       setDraftImageUri(null);
       setComposing(false);
@@ -233,12 +221,19 @@ export default function HomeScreen() {
   const toggleLike = async (post: Post) => {
     if (!uid) return;
     const liked = post.likedBy?.includes(uid);
+    const apply = (p: Post, nowLiked: boolean, likes?: number): Post => ({
+      ...p,
+      likedBy: nowLiked ? [...(p.likedBy ?? []).filter(x => x !== uid), uid] : (p.likedBy ?? []).filter(x => x !== uid),
+      likes: likes ?? Math.max(0, p.likes + (nowLiked ? 1 : -1)),
+    });
+    // Optimistic update, then reconcile with the server's count
+    setPosts(prev => prev.map(p => (p.id === post.id ? apply(p, !liked) : p)));
     try {
-      await updateDoc(doc(db, "posts", post.id), {
-        likedBy: liked ? arrayRemove(uid) : arrayUnion(uid),
-        likes: increment(liked ? -1 : 1),
-      });
-    } catch {}
+      const res = await toggleLikeApi(post.id);
+      setPosts(prev => prev.map(p => (p.id === post.id ? apply(p, res.liked, res.likes) : p)));
+    } catch {
+      setPosts(prev => prev.map(p => (p.id === post.id ? apply(p, !!liked) : p)));
+    }
   };
 
   const myInitials = myProfile?.name

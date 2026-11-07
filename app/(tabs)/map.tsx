@@ -1,17 +1,15 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  View, Text, StyleSheet, SafeAreaView,
+  View, Text, StyleSheet, SafeAreaView, TextInput, Keyboard,
   FlatList, TouchableOpacity, Dimensions, Alert, ActivityIndicator,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import {
-  collection, query, where, orderBy, onSnapshot,
-  Timestamp, writeBatch, getDocs, doc,
-} from "firebase/firestore";
-import { db } from "../../config/firebaseConfig";
+import { Session } from "../../types";
+import { subscribeSessions } from "../../services/sessions";
+import { askGo } from "../../services/insights";
 
 const { height } = Dimensions.get("window");
 
@@ -20,30 +18,19 @@ const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", in
 type SessionType = "beach" | "grass" | "indoor";
 type CourtFilter = "all" | SessionType;
 
+// Buffalo / UB, used until the user's location is known
 const DEFAULT_REGION = {
-  latitude: 34.0522,
-  longitude: -118.3790,
+  latitude: 42.95,
+  longitude: -78.82,
   latitudeDelta: 0.3,
   longitudeDelta: 0.3,
 };
 
-interface Session {
-  id: string;
-  hostId: string;
-  hostName: string;
-  title: string;
-  type: SessionType;
-  price: number;
-  skillLevel: string;
-  duration: string;
-  maxPlayers: number;
-  spotsFilled: number;
-  coordinate: { latitude: number; longitude: number };
-  address: string;
-  sessionDate: any;
-  createdAt: any;
-  active: boolean;
-}
+const ASK_EXAMPLES = [
+  "Free beach games tonight",
+  "Indoor game tomorrow evening, intermediate",
+  "Anything near me this weekend with open spots",
+];
 
 function spotsLeftColor(filled: number, total: number) {
   const ratio = filled / total;
@@ -82,6 +69,15 @@ export default function MapScreen() {
   const [, setLoadingLocation] = useState(true);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
+  // Ask GO! (Gemini search)
+  const [askText, setAskText] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [aiResult, setAiResult] = useState<{ reply: string; sessions: Session[] } | null>(null);
+  const [askFocused, setAskFocused] = useState(false);
+
+  const locationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  useEffect(() => { locationRef.current = userLocation; }, [userLocation]);
+
   const nextSevenDays = useMemo(() => getNextSevenDays(), []);
 
   // Recompute days once per day so labels stay fresh
@@ -113,54 +109,47 @@ export default function MapScreen() {
     return () => { sub?.remove(); };
   }, []);
 
-  // Clean up expired sessions on mount
+  // Upcoming games from Tiger Cloud, refreshed every 10s (expired games are
+  // filtered out by the server, so no client-side cleanup is needed)
   useEffect(() => {
-    const cleanup = async () => {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      try {
-        const expiredQ = query(
-          collection(db, "sessions"),
-          where("active", "==", true),
-          where("sessionDate", "<", Timestamp.fromDate(startOfToday))
-        );
-        const snap = await getDocs(expiredQ);
-        if (snap.empty) return;
-        const batch = writeBatch(db);
-        snap.docs.forEach(d => batch.update(doc(db, "sessions", d.id), { active: false }));
-        await batch.commit();
-      } catch {}
-    };
-    cleanup();
-  }, []);
-
-  // Live sessions from Firestore
-  useEffect(() => {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const q = query(
-      collection(db, "sessions"),
-      where("active", "==", true),
-      where("sessionDate", ">=", Timestamp.fromDate(startOfToday)),
-      orderBy("sessionDate", "asc")
+    return subscribeSessions(
+      () => ({ lat: locationRef.current?.latitude, lng: locationRef.current?.longitude }),
+      data => { setSessions(data); setSessionsLoading(false); },
+      () => setSessionsLoading(false),
     );
-    const unsub = onSnapshot(q, snapshot => {
-      const data: Session[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Session));
-      setSessions(data);
-      setSessionsLoading(false);
-    }, () => setSessionsLoading(false));
-    return unsub;
   }, []);
 
-  const filtered = useMemo(() => sessions.filter(s => {
+  const runAsk = async (text: string) => {
+    const q = text.trim();
+    if (!q) return;
+    Keyboard.dismiss();
+    setAskText(q);
+    setAsking(true);
+    try {
+      const res = await askGo(q, userLocation);
+      setAiResult({ reply: res.reply, sessions: res.sessions });
+      setDayFilter(null);
+      setCourtFilter("all");
+      setSelectedId(null);
+    } catch (e: any) {
+      Alert.alert("Ask GO!", e?.message ?? "Search is unavailable right now.");
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  const clearAsk = () => { setAiResult(null); setAskText(""); };
+
+  const baseSessions = aiResult ? aiResult.sessions : sessions;
+  const filtered = useMemo(() => baseSessions.filter(s => {
     const courtMatch = courtFilter === "all" || s.type === courtFilter;
     let dayMatch = true;
     if (dayFilter) {
-      const sd = s.sessionDate?.toDate ? s.sessionDate.toDate() : new Date(s.sessionDate);
+      const sd = new Date(s.sessionDate);
       dayMatch = sd.toDateString() === dayFilter.toDateString();
     }
     return courtMatch && dayMatch;
-  }), [sessions, courtFilter, dayFilter]);
+  }), [baseSessions, courtFilter, dayFilter]);
 
   const selectedDayLabel = dayFilter
     ? dayLabel(dayFilter, nextSevenDays.findIndex(d => d.toDateString() === dayFilter.toDateString()))
@@ -209,13 +198,16 @@ export default function MapScreen() {
         {item.address ? (
           <View style={styles.cardRow}>
             <Ionicons name="location-outline" size={13} color="#6B7280" />
-            <Text style={styles.cardMeta}>{item.address}</Text>
+            <Text style={styles.cardMeta}>
+              {item.address}{item.distanceKm !== undefined ? ` · ${item.distanceKm} km` : ""}
+            </Text>
           </View>
         ) : null}
         <View style={styles.cardRow}>
           <Ionicons name="time-outline" size={13} color="#6B7280" />
           <Text style={styles.cardMeta}>
-            {(item as any).timeRange ?? item.duration}
+            {new Date(item.sessionDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            {" · "}{item.timeRange ?? item.duration}
           </Text>
         </View>
         <View style={styles.cardRow}>
@@ -231,9 +223,9 @@ export default function MapScreen() {
           </View>
           <TouchableOpacity
             style={styles.joinBtn}
-            onPress={() => Alert.alert("Join Session", "Joining sessions coming soon!")}
+            onPress={() => router.push(`/session/${item.id}` as any)}
           >
-            <Text style={styles.joinBtnText}>Join</Text>
+            <Text style={styles.joinBtnText}>{spotsLeft > 0 ? "Join" : "View"}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -252,6 +244,46 @@ export default function MapScreen() {
           <Ionicons name="add" size={22} color="#FFF" />
         </TouchableOpacity>
       </View>
+
+      {/* Ask GO!: natural-language search (Gemini) */}
+      <View style={styles.askBar}>
+        <Ionicons name="sparkles" size={16} color="#6B7280" />
+        <TextInput
+          style={styles.askInput}
+          placeholder="Ask GO! e.g. free beach games tonight"
+          placeholderTextColor="#9CA3AF"
+          value={askText}
+          onChangeText={setAskText}
+          onSubmitEditing={() => runAsk(askText)}
+          onFocus={() => setAskFocused(true)}
+          onBlur={() => setAskFocused(false)}
+          returnKeyType="search"
+        />
+        {asking ? (
+          <ActivityIndicator size="small" color="#000" />
+        ) : aiResult || askText ? (
+          <TouchableOpacity onPress={clearAsk} hitSlop={10}>
+            <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      {askFocused && !askText && !aiResult && (
+        <View style={styles.askExamples}>
+          {ASK_EXAMPLES.map(ex => (
+            <TouchableOpacity key={ex} style={styles.askChip} onPress={() => runAsk(ex)}>
+              <Text style={styles.askChipText}>{ex}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      {aiResult && (
+        <View style={styles.aiBanner}>
+          <Text style={styles.aiBannerText}>{aiResult.reply}</Text>
+          <TouchableOpacity onPress={clearAsk}>
+            <Text style={styles.aiBannerClear}>Show all</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <MapView
         ref={mapRef}
@@ -378,8 +410,10 @@ export default function MapScreen() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>🏐</Text>
-              <Text style={styles.emptyTitle}>No sessions nearby</Text>
-              <Text style={styles.emptySubtitle}>Be the first to host one!</Text>
+              <Text style={styles.emptyTitle}>{aiResult ? "No matching games" : "No sessions nearby"}</Text>
+              <Text style={styles.emptySubtitle}>
+                {aiResult ? "Try a different search, or host one yourself!" : "Be the first to host one!"}
+              </Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push("/create-session" as any)}>
                 <Text style={styles.emptyBtnText}>+ Create Session</Text>
               </TouchableOpacity>
@@ -404,6 +438,24 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
   },
   map: { height: height * 0.36 },
+
+  // Ask GO!
+  askBar: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
+    backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB",
+  },
+  askInput: { flex: 1, paddingVertical: 10, fontSize: 14, color: "#000" },
+  askExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
+  askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: 10, paddingVertical: 6 },
+  askChipText: { fontSize: 12, color: "#374151" },
+  aiBanner: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    marginHorizontal: 12, marginBottom: 8, padding: 10,
+    backgroundColor: "#000", borderRadius: 10,
+  },
+  aiBannerText: { flex: 1, color: "#FFF", fontSize: 13, fontWeight: "600" },
+  aiBannerClear: { color: "#9CA3AF", fontSize: 12, fontWeight: "700" },
   pin: {
     width: 36, height: 36, borderRadius: 18,
     justifyContent: "center", alignItems: "center",
