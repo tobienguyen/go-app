@@ -1,14 +1,20 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  Alert, ActivityIndicator, TextInput,
+  Alert, ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, reload, signOut } from "firebase/auth";
-import { httpsCallable } from "firebase/functions";
-import { auth, functions } from "../../config/firebaseConfig";
+import {
+  createUserWithEmailAndPassword, sendEmailVerification, reload, signOut,
+} from "firebase/auth";
+import { auth } from "../../config/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 
+// Email verification uses Firebase's built-in verification link.
+// The previous Twilio Verify (6-digit code) flow lives in archive/twilio-verify/.
+
+// The account is created with a throwaway password; the user sets their real
+// password on signup-details right after verifying.
 function tempPassword(): string {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let p = "";
@@ -16,72 +22,74 @@ function tempPassword(): string {
   return p + "!Zz9";
 }
 
-const sendCodeFn   = () => httpsCallable(functions, "sendCode");
-const verifyCodeFn = () => httpsCallable(functions, "verifyCode");
-
 export default function VerifyFirstScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const router = useRouter();
 
-  const [sending, setSending]   = useState(false);
-  const [sent, setSent]         = useState(false);
-  const [code, setCode]         = useState(["", "", "", "", "", ""]);
-  const [verifying, setVerifying] = useState(false);
+  const [sending, setSending]     = useState(false);
+  const [sent, setSent]           = useState(false);
+  const [checking, setChecking]   = useState(false);
   const [resending, setResending] = useState(false);
 
-  const inputs = useRef<(TextInput | null)[]>([]);
-
-  // ── Step 1: create temp account + send code ──────────────────────────────
-  const handleSendCode = async () => {
+  // ── Step 1: create temp account + send verification link ────────────────
+  const handleSendLink = async () => {
     setSending(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, tempPassword());
-      await sendCodeFn()({ email });
+      const cred = await createUserWithEmailAndPassword(auth, email, tempPassword());
+      try {
+        await sendEmailVerification(cred.user);
+      } catch (sendError) {
+        // Don't leave a half-created account behind: it would have a password
+        // nobody knows and lock this email out of signing up again.
+        try { await cred.user.delete(); } catch {}
+        throw sendError;
+      }
       setSent(true);
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         router.replace({ pathname: "/auth/login", params: { email } } as any);
+      } else if (error.code === "auth/too-many-requests") {
+        Alert.alert("Slow down", "Too many attempts. Wait a minute and try again.");
       } else {
-        Alert.alert("Error", "Could not send verification code. Check your connection.");
+        Alert.alert("Error", "Could not send the verification email. Check your connection.");
       }
     } finally {
       setSending(false);
     }
   };
 
-  // ── Step 2: verify the 6-digit code ─────────────────────────────────────
-  const handleVerify = async () => {
-    const fullCode = code.join("");
-    if (fullCode.length < 6) {
-      Alert.alert("Enter Code", "Please enter the full 6-digit code.");
+  // ── Step 2: user taps the link in their email, then comes back ──────────
+  const handleCheckVerified = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      router.replace("/auth" as any);
       return;
     }
-
-    setVerifying(true);
+    setChecking(true);
     try {
-      await verifyCodeFn()({ email, code: fullCode });
-      // Reload so auth.currentUser.emailVerified is now true
-      await reload(auth.currentUser!);
-      router.replace("/auth/signup-details" as any);
-    } catch (error: any) {
-      const msg = error?.message ?? "";
-      if (msg.includes("Incorrect code")) {
-        Alert.alert("Wrong Code", "That code is incorrect. Please try again.");
+      await reload(user);
+      if (auth.currentUser?.emailVerified) {
+        router.replace("/auth/signup-details" as any);
       } else {
-        Alert.alert("Error", "Could not verify. Try again.");
+        Alert.alert(
+          "Not verified yet",
+          "Tap the link in the email first. If you can't find it, check your spam or junk folder.",
+        );
       }
+    } catch {
+      Alert.alert("Error", "Could not check verification. Try again.");
     } finally {
-      setVerifying(false);
+      setChecking(false);
     }
   };
 
   const handleResend = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
     setResending(true);
     try {
-      await sendCodeFn()({ email });
-      setCode(["", "", "", "", "", ""]);
-      inputs.current[0]?.focus();
-      Alert.alert("Sent", `A new code was sent to ${email}`);
+      await sendEmailVerification(user);
+      Alert.alert("Sent", `A new link was sent to ${email}`);
     } catch {
       Alert.alert("Error", "Could not resend. Wait a moment and try again.");
     } finally {
@@ -95,21 +103,6 @@ export default function VerifyFirstScreen() {
     router.replace("/auth" as any);
   };
 
-  // ── Code input helpers ───────────────────────────────────────────────────
-  const onDigitChange = (text: string, index: number) => {
-    const digit = text.replace(/[^0-9]/g, "").slice(-1);
-    const next = [...code];
-    next[index] = digit;
-    setCode(next);
-    if (digit && index < 5) inputs.current[index + 1]?.focus();
-  };
-
-  const onKeyPress = (key: string, index: number) => {
-    if (key === "Backspace" && !code[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  };
-
   // ── Step 1 UI ─────────────────────────────────────────────────────────────
   if (!sent) {
     return (
@@ -119,20 +112,20 @@ export default function VerifyFirstScreen() {
             <Ionicons name="shield-checkmark-outline" size={48} color="#000" />
           </View>
           <Text style={styles.title}>Verify your email first</Text>
-          <Text style={styles.subtitle}>{"We'll send a 6-digit code to"}</Text>
+          <Text style={styles.subtitle}>{"We'll send a verification link to"}</Text>
           <Text style={styles.email}>{email}</Text>
           <Text style={styles.instruction}>
-            Enter the code in this app to confirm it{"'"}s really you.
+            Tap the link in the email to confirm it{"'"}s really you.
           </Text>
 
           <TouchableOpacity
             style={[styles.primaryBtn, sending && { opacity: 0.6 }]}
-            onPress={handleSendCode}
+            onPress={handleSendLink}
             disabled={sending}
           >
             {sending
               ? <ActivityIndicator color="#FFF" />
-              : <Text style={styles.primaryBtnText}>Send Code</Text>
+              : <Text style={styles.primaryBtnText}>Send Link</Text>
             }
           </TouchableOpacity>
 
@@ -152,34 +145,21 @@ export default function VerifyFirstScreen() {
           <Ionicons name="mail-open-outline" size={48} color="#000" />
         </View>
         <Text style={styles.title}>Check your inbox</Text>
-        <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
+        <Text style={styles.subtitle}>We sent a verification link to</Text>
         <Text style={styles.email}>{email}</Text>
-
-        {/* 6-digit code boxes */}
-        <View style={styles.codeRow}>
-          {code.map((digit, i) => (
-            <TextInput
-              key={i}
-              ref={(el) => { inputs.current[i] = el; }}
-              style={[styles.codeBox, digit ? styles.codeBoxFilled : null]}
-              value={digit}
-              onChangeText={(t) => onDigitChange(t, i)}
-              onKeyPress={({ nativeEvent }) => onKeyPress(nativeEvent.key, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-            />
-          ))}
-        </View>
+        <Text style={styles.instruction}>
+          Tap the link, then come back here.{"\n"}
+          Don{"'"}t see it? Check your spam or junk folder.
+        </Text>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, verifying && { opacity: 0.6 }]}
-          onPress={handleVerify}
-          disabled={verifying}
+          style={[styles.primaryBtn, checking && { opacity: 0.6 }]}
+          onPress={handleCheckVerified}
+          disabled={checking}
         >
-          {verifying
+          {checking
             ? <ActivityIndicator color="#FFF" />
-            : <Text style={styles.primaryBtnText}>Verify</Text>
+            : <Text style={styles.primaryBtnText}>I{"'"}ve verified</Text>
           }
         </TouchableOpacity>
 
@@ -190,7 +170,7 @@ export default function VerifyFirstScreen() {
         >
           {resending
             ? <ActivityIndicator color="#000" size="small" />
-            : <Text style={styles.secondaryBtnText}>Resend code</Text>
+            : <Text style={styles.secondaryBtnText}>Resend link</Text>
           }
         </TouchableOpacity>
 
@@ -221,16 +201,6 @@ const styles = StyleSheet.create({
     fontSize: 14, color: "#9CA3AF", textAlign: "center",
     lineHeight: 20, marginBottom: 36,
   },
-  codeRow: {
-    flexDirection: "row", gap: 10, marginBottom: 36, marginTop: 8,
-  },
-  codeBox: {
-    width: 46, height: 56, borderRadius: 12,
-    borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    textAlign: "center", fontSize: 22, fontWeight: "700", color: "#000",
-  },
-  codeBoxFilled: { borderColor: "#000", backgroundColor: "#FFF" },
   primaryBtn: {
     backgroundColor: "#000", width: "100%", paddingVertical: 18,
     borderRadius: 14, alignItems: "center", marginBottom: 14,
