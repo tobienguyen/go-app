@@ -54,6 +54,11 @@ export default function VerifyEmailScreen() {
   };
 
   const handleSignOut = async () => {
+    // An email signup that never finished has a throwaway password nobody
+    // knows; delete it so this email can sign up again later.
+    const unfinished = user && !user.emailVerified && !user.displayName &&
+      user.providerData.every(p => p.providerId === "password");
+    if (unfinished) { try { await user.delete(); } catch {} }
     await signOut(auth);
     router.replace("/auth" as any);
   };

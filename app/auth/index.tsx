@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -77,31 +76,10 @@ export default function GatekeeperScreen() {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Probe whether an account exists by attempting a sign-in with a dummy password.
-      // firebase/auth no longer reliably returns sign-in methods, so this is the
-      // only way to distinguish "account exists" from "new user" without a backend.
-      await signInWithEmailAndPassword(auth, email, "____probe____");
-    } catch (error: any) {
-      if (
-        error.code === "auth/wrong-password" ||
-        error.code === "auth/invalid-credential"
-      ) {
-        // Account exists — send to login
-        router.push({ pathname: "/auth/login", params: { email } } as any);
-      } else if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/invalid-email"
-      ) {
-        // No account — start verification flow
-        router.push({ pathname: "/auth/verify-first", params: { email } } as any);
-      } else {
-        Alert.alert("Connection Error", "Check your internet connection and try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // Firebase's email enumeration protection hides whether an account
+    // exists, so we don't guess here. The verify screen tries to create the
+    // account and sends returning users to login if the email is taken.
+    router.push({ pathname: "/auth/verify-first", params: { email: email.trim().toLowerCase() } } as any);
   };
 
   return (

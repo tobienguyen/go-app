@@ -138,7 +138,7 @@ export default function AnalyzeScreen() {
       <SafeAreaView style={styles.center}>
         <Ionicons name="camera-outline" size={48} color="#9CA3AF" />
         <Text style={styles.permTitle}>Camera Access Needed</Text>
-        <Text style={styles.permSub}>Go! needs camera access to track your jump.</Text>
+        <Text style={styles.permSub}>GO! needs camera access to track your jump.</Text>
         <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
           <Text style={styles.permBtnText}>Allow Camera</Text>
         </TouchableOpacity>
@@ -603,7 +603,7 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
       {/* Top bar */}
       <SafeAreaView style={styles.topBar}>
         <View style={styles.topBarInner}>
-          <Text style={styles.logoText}>Go<Text style={{ fontStyle: "italic" }}>!</Text></Text>
+          <Text style={styles.logoText}>GO<Text style={{ fontStyle: "italic" }}>!</Text></Text>
           <View style={styles.modeToggle}>
             {(["jump", "record"] as Mode[]).map(m => (
               <TouchableOpacity

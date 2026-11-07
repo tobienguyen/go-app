@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
   Alert, ActivityIndicator,
@@ -30,10 +30,22 @@ export default function VerifyFirstScreen() {
   const [sent, setSent]           = useState(false);
   const [checking, setChecking]   = useState(false);
   const [resending, setResending] = useState(false);
+  const [failed, setFailed]       = useState(false);
+
+  // Start right away: create the account and send the link. If the email
+  // already has an account, handleSendLink routes to the login screen.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || !email) return;
+    started.current = true;
+    handleSendLink();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email]);
 
   // ── Step 1: create temp account + send verification link ────────────────
   const handleSendLink = async () => {
     setSending(true);
+    setFailed(false);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, tempPassword());
       try {
@@ -48,9 +60,14 @@ export default function VerifyFirstScreen() {
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         router.replace({ pathname: "/auth/login", params: { email } } as any);
+      } else if (error.code === "auth/invalid-email") {
+        Alert.alert("Invalid Email", "Please check the email address and try again.");
+        router.back();
       } else if (error.code === "auth/too-many-requests") {
+        setFailed(true);
         Alert.alert("Slow down", "Too many attempts. Wait a minute and try again.");
       } else {
+        setFailed(true);
         Alert.alert("Error", "Could not send the verification email. Check your connection.");
       }
     } finally {
@@ -103,7 +120,19 @@ export default function VerifyFirstScreen() {
     router.replace("/auth" as any);
   };
 
-  // ── Step 1 UI ─────────────────────────────────────────────────────────────
+  // ── Checking the email / sending the link ──────────────────────────────────
+  if (!sent && !failed) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#000" />
+          <Text style={[styles.subtitle, { marginTop: 16 }]}>Checking {email}…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Step 1 UI (only shown if sending failed) ──────────────────────────────
   if (!sent) {
     return (
       <SafeAreaView style={styles.container}>
@@ -125,7 +154,7 @@ export default function VerifyFirstScreen() {
           >
             {sending
               ? <ActivityIndicator color="#FFF" />
-              : <Text style={styles.primaryBtnText}>Send Link</Text>
+              : <Text style={styles.primaryBtnText}>Try Again</Text>
             }
           </TouchableOpacity>
 
