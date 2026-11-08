@@ -162,7 +162,7 @@ export default function GatekeeperScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   logoHeader: { marginTop: 80, marginBottom: 20, alignItems: "center", justifyContent: "center" },
-  logoImage: { width: 250, height: 150 },
+  logoImage: { width: 180, height: 180 },
   content: { width: "100%", paddingHorizontal: 30 },
   pageSubtitle: {
     fontSize: 12, color: "#666666", textAlign: "center",
