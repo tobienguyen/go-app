@@ -13,6 +13,9 @@ const LETTERS = [
 ];
 
 // t runs 0 -> 1; these turn it into a jump arc (x moves steadily, y rises then falls)
+// Nudge right so the logo reads as centered on screen
+const SHIFT_RIGHT = 0.1;
+
 const ARC_T = [0, 0.25, 0.5, 0.75, 1];
 const ARC_Y = [0, -0.75, -1, -0.75, 0];
 
@@ -46,8 +49,8 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
       ]),
       // fox leaps in from the left and lands on the ball
       Animated.parallel([
-        Animated.timing(foxOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(leap, { toValue: 1, duration: 620, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(foxOpacity, { toValue: 1, duration: 160, useNativeDriver: true }),
+        Animated.timing(leap, { toValue: 1, duration: 2200, easing: Easing.linear, useNativeDriver: true }),
       ]),
       // little "landed" bounce of the whole logo
       Animated.sequence([
@@ -63,7 +66,9 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const foxX = leap.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.9, 0] });
+  // start with the whole fox just inside the left edge of the screen
+  const startX = -((width - size) / 2 + size * SHIFT_RIGHT) + size * 0.02;
+  const foxX = leap.interpolate({ inputRange: [0, 1], outputRange: [startX, 0] });
   const foxY = leap.interpolate({ inputRange: ARC_T, outputRange: ARC_Y.map(v => v * size * 0.9) });
   const foxRotate = leap.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["-22deg", "0deg", "10deg"] });
   const ballScaleX = ballSquash.interpolate({ inputRange: [0.82, 1], outputRange: [1.12, 1] });
@@ -71,7 +76,7 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.introBg, { opacity: fade }]}>
       <Pressable style={styles.center} onPress={finish}>
-        <Animated.View style={{ width: size, height: size, transform: [{ scale: settle }] }}>
+        <Animated.View style={{ width: size, height: size, transform: [{ translateX: size * SHIFT_RIGHT }, { scale: settle }] }}>
           <Animated.Image
             source={BALL}
             style={[styles.layer, { transform: [{ translateY: ballY }, { scaleX: ballScaleX }, { scaleY: ballSquash }] }]}
