@@ -295,6 +295,64 @@ const actions: Record<string, Handler> = {
     return rows[0] ? toUser(rows[0]) : null;
   },
 
+  // Follows (friend requests) -----------------------------------------------
+  async followRequest({ db, uid, data }) {
+    const toUid = str(data.toUid, 128);
+    if (!toUid || toUid === uid) throw new HttpsError("invalid-argument", "Can't follow that user.");
+    await db.query(
+      `insert into follows (from_uid, to_uid) values ($1, $2) on conflict do nothing`, [uid, toUid],
+    );
+    return { status: "pending" };
+  },
+
+  async acceptFollow({ db, uid, data }) {
+    // Only the person who received the request can accept it
+    await db.query(
+      `update follows set status = 'accepted' where from_uid = $1 and to_uid = $2`,
+      [str(data.fromUid, 128), uid],
+    );
+    return { status: "accepted" };
+  },
+
+  async removeFollow({ db, uid, data }) {
+    const fromUid = str(data.fromUid, 128), toUid = str(data.toUid, 128);
+    if (uid !== fromUid && uid !== toUid) throw new HttpsError("permission-denied", "Not your follow.");
+    await db.query(`delete from follows where from_uid = $1 and to_uid = $2`, [fromUid, toUid]);
+    return { status: "none" };
+  },
+
+  async followStatus({ db, uid, data }) {
+    const { rows } = await db.query(
+      `select status from follows where from_uid = $1 and to_uid = $2`, [uid, str(data.toUid, 128)],
+    );
+    return { status: rows[0]?.status ?? "none" };
+  },
+
+  async pendingFollows({ db, uid }) {
+    const { rows } = await db.query(
+      `select f.from_uid, f.to_uid, f.status, f.created_at, coalesce(u.name, '') as from_name
+       from follows f left join users u on u.id = f.from_uid
+       where f.to_uid = $1 and f.status = 'pending'
+       order by f.created_at desc`,
+      [uid],
+    );
+    return rows.map(r => ({
+      id: `${r.from_uid}|${r.to_uid}`, fromUid: r.from_uid, toUid: r.to_uid,
+      status: r.status, fromName: r.from_name, createdAt: new Date(r.created_at).toISOString(),
+    }));
+  },
+
+  async followCounts({ db, data }) {
+    const { rows } = await db.query(
+      `select
+         count(*) filter (where to_uid = $1)::int   as followers,
+         count(*) filter (where from_uid = $1)::int as following
+       from follows where status = 'accepted' and (to_uid = $1 or from_uid = $1)`,
+      [str(data.uid, 128)],
+    );
+    return { followers: rows[0]?.followers ?? 0, following: rows[0]?.following ?? 0 };
+  },
+
   // Feed --------------------------------------------------------------------
   async feed({ db, data }) {
     const limit = Math.min(Math.max(num(data.limit) ?? 50, 1), 100);

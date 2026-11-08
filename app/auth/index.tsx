@@ -31,7 +31,6 @@ const GOOGLE_WEB_CLIENT_ID = "760211922089-c3nmfede113rlfssmm6rj9jeagvgj0o8.apps
 
 export default function GatekeeperScreen() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const router = useRouter();
@@ -70,8 +69,9 @@ export default function GatekeeperScreen() {
   };
 
   // ── Email Continue ──────────────────────────────────────────────────────
-  const handleContinue = async () => {
-    if (!email.includes("@")) {
+  const handleContinue = () => {
+    const trimmed = email.trim();
+    if (!trimmed.includes("@") || !trimmed.includes(".")) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
@@ -79,7 +79,7 @@ export default function GatekeeperScreen() {
     // Firebase's email enumeration protection hides whether an account
     // exists, so we don't guess here. The signup form tries to create the
     // account and sends returning users to login if the email is taken.
-    router.push({ pathname: "/auth/signup-details", params: { email: email.trim().toLowerCase() } } as any);
+    router.push({ pathname: "/auth/signup-details", params: { email: trimmed.toLowerCase() } } as any);
   };
 
   return (
@@ -105,12 +105,8 @@ export default function GatekeeperScreen() {
           keyboardType="email-address"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>CONTINUE</Text>
-          )}
+        <TouchableOpacity style={styles.button} onPress={handleContinue}>
+          <Text style={styles.buttonText}>CONTINUE</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>

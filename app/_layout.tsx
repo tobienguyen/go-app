@@ -31,8 +31,8 @@ export default function RootLayout() {
     if (initializing) return;
 
     const inAuthGroup = (segments as any)[0] === 'auth';
-    const onVerifyScreen = (segments as any)[1] === 'verify-email';
-    const onVerifyFirst = (segments as any)[1] === 'verify-first';
+    const onVerifyScreen  = (segments as any)[1] === 'verify-email';
+    const onVerifyFirst   = (segments as any)[1] === 'verify-first';
     const onSignupDetails = (segments as any)[1] === 'signup-details';
 
     // Social sign-in users (Google/Apple) don't go through signup-details —
@@ -42,7 +42,6 @@ export default function RootLayout() {
     ) ?? false;
 
     if (!user && !inAuthGroup) {
-      // Not logged in — send to gatekeeper
       router.replace('/auth' as any);
     } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst && !onSignupDetails) {
       // Logged in but email not verified — hold at verify screen
@@ -88,6 +87,11 @@ export default function RootLayout() {
         {/* Session detail screen */}
         <Stack.Screen
           name="session/[id]"
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="user/[id]"
           options={{ headerShown: false }}
         />
 

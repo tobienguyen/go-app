@@ -11,7 +11,7 @@ create extension if not exists postgis;   -- location queries ("games near me")
 drop view if exists court_best_times;
 drop materialized view if exists player_activity_weekly cascade;
 drop materialized view if exists court_activity_hourly cascade;
-drop table if exists post_likes, posts, session_events, session_attendees, sessions, users cascade;
+drop table if exists follows, post_likes, posts, session_events, session_attendees, sessions, users cascade;
 
 -- ── Users ───────────────────────────────────────────────────────────────────
 -- id is the Firebase Auth uid (Firebase still handles login).
@@ -94,6 +94,17 @@ create table post_likes (
   user_id  text not null references users(id) on delete cascade,
   primary key (post_id, user_id)
 );
+
+-- ── Follows / friend requests ──────────────────────────────────────────────
+create table follows (
+  from_uid    text not null references users(id) on delete cascade,
+  to_uid      text not null references users(id) on delete cascade,
+  status      text not null default 'pending' check (status in ('pending', 'accepted')),
+  created_at  timestamptz not null default now(),
+  primary key (from_uid, to_uid),
+  check (from_uid <> to_uid)
+);
+create index follows_to_idx on follows (to_uid, status);
 
 -- ── Court Pulse: continuous aggregate (auto-updating hourly rollup) ─────────
 -- materialized_only = false makes it real-time: queries combine the stored

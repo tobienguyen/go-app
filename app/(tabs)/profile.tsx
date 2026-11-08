@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  TextInput, ScrollView, Alert, Image, ActivityIndicator, Dimensions,
+  TextInput, ScrollView, Alert, Image, ActivityIndicator, Dimensions, Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
 import { getUser, updateUser, uploadAvatar, uploadMediaItem, isLocalUri } from "../../services/users";
+import { getPendingRequests, acceptFollowRequest, removeFollow, getFollowerCount, getFollowingCount } from "../../services/follows";
+import type { Follow } from "../../services/follows";
 import * as ImagePicker from "expo-image-picker";
 import { MediaItem, UserProfile, Post } from "../../types";
 import { getUserPosts } from "../../services/posts";
@@ -35,6 +37,7 @@ const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", 
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
 const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
 
+
 const BLANK_PROFILE: UserProfile = {
   uid: "", name: "", email: "", photoURL: "",
   positions: [], skillLevel: "Beginner", description: "",
@@ -61,6 +64,11 @@ export default function ProfileScreen() {
   const [draftMedia, setDraftMedia] = useState<MediaItem[]>([]);
   const [draftPhotoUri, setDraftPhotoUri] = useState<string | null>(null);
 
+  const [followerCount, setFollowerCount]   = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState<Follow[]>([]);
+  const [requesterNames, setRequesterNames]   = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (!uid) return;
     loadProfile();
@@ -80,6 +88,21 @@ export default function ProfileScreen() {
         setDraftSkill(p.skillLevel);
         setDraftMedia(p.mediaItems ?? []);
       }
+      const [fc, fgc, reqs] = await Promise.all([
+        getFollowerCount(uid!),
+        getFollowingCount(uid!),
+        getPendingRequests(uid!),
+      ]);
+      setFollowerCount(fc);
+      setFollowingCount(fgc);
+      setPendingRequests(reqs);
+      // Load requester display names
+      const names: Record<string, string> = {};
+      await Promise.all(reqs.map(async r => {
+        const u = await getUser(r.fromUid);
+        names[r.fromUid] = u?.name || u?.email || "Someone";
+      }));
+      setRequesterNames(names);
     } catch (e) {
       console.error("loadProfile", e);
     } finally {
@@ -164,25 +187,27 @@ export default function ProfileScreen() {
   };
 
   const addMedia = async () => {
-    if (draftMedia.length >= 9) { Alert.alert("Max 9 photos"); return; }
+    if (draftMedia.length >= 9) { Alert.alert("Max 9 items"); return; }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") { Alert.alert("Permission needed"); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsMultipleSelection: true,
       quality: 0.8,
+      videoMaxDuration: 60,
     });
     if (!result.canceled) {
       const newItems: MediaItem[] = result.assets.map(a => ({
         uri: a.uri,
         landscape: (a.width ?? 1) > (a.height ?? 1),
+        type: a.type === "video" ? "video" : "image",
       }));
       setDraftMedia(prev => [...prev, ...newItems].slice(0, 9));
     }
   };
 
   const removeMedia = (uri: string) => {
-    Alert.alert("Remove photo?", undefined, [
+    Alert.alert("Remove item?", undefined, [
       { text: "Cancel", style: "cancel" },
       { text: "Remove", style: "destructive", onPress: () => setDraftMedia(prev => prev.filter(m => m.uri !== uri)) },
     ]);
@@ -279,6 +304,18 @@ export default function ProfileScreen() {
           )}
           <Text style={styles.emailText}>{email}</Text>
 
+          <View style={styles.followStatsRow}>
+            <TouchableOpacity style={styles.followStat} onPress={() => router.push(`/profile/followers` as any)}>
+              <Text style={styles.followStatValue}>{followerCount}</Text>
+              <Text style={styles.followStatLabel}>Followers</Text>
+            </TouchableOpacity>
+            <View style={styles.followStatDivider} />
+            <TouchableOpacity style={styles.followStat} onPress={() => router.push(`/profile/following` as any)}>
+              <Text style={styles.followStatValue}>{followingCount}</Text>
+              <Text style={styles.followStatLabel}>Following</Text>
+            </TouchableOpacity>
+          </View>
+
           {editing ? (
             <TextInput
               style={styles.descriptionInput}
@@ -374,29 +411,44 @@ export default function ProfileScreen() {
               <View style={{ gap: GAP, marginTop: 4 }}>
                 {rows.map((row, rowIdx) => (
                   <View key={rowIdx} style={{ flexDirection: "row", gap: GAP }}>
-                    {row.map((item) => (
-                      <TouchableOpacity
-                        key={item.uri}
-                        onPress={editing ? () => removeMedia(item.uri) : undefined}
-                        activeOpacity={editing ? 0.7 : 1}
-                        style={{ position: "relative" }}
-                      >
-                        <Image
-                          source={{ uri: item.uri }}
-                          style={{
-                            width: item.landscape ? GRID_W : PORT_W,
-                            height: item.landscape ? LAND_H : PORT_H,
-                            borderRadius: 10,
-                          }}
-                          resizeMode="cover"
-                        />
-                        {editing && (
-                          <View style={styles.mediaRemoveBadge}>
-                            <Ionicons name="close" size={12} color="#FFF" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    ))}
+                    {row.map((item) => {
+                      const w = item.landscape ? GRID_W : PORT_W;
+                      const h = item.landscape ? LAND_H : PORT_H;
+                      const isVideo = item.type === "video";
+                      return (
+                        <TouchableOpacity
+                          key={item.uri}
+                          onPress={editing
+                            ? () => removeMedia(item.uri)
+                            : isVideo ? () => Linking.openURL(item.uri) : undefined}
+                          activeOpacity={editing || isVideo ? 0.7 : 1}
+                          style={{ position: "relative" }}
+                        >
+                          {isVideo ? (
+                            <View style={[styles.videoTile, { width: w, height: h }]}>
+                              <Ionicons name="play-circle" size={44} color="rgba(255,255,255,0.9)" />
+                            </View>
+                          ) : (
+                            <Image
+                              source={{ uri: item.uri }}
+                              style={{ width: w, height: h, borderRadius: 10 }}
+                              resizeMode="cover"
+                            />
+                          )}
+                          {editing && (
+                            <View style={styles.mediaRemoveBadge}>
+                              <Ionicons name="close" size={12} color="#FFF" />
+                            </View>
+                          )}
+                          {!editing && isVideo && (
+                            <View style={styles.videoBadge}>
+                              <Ionicons name="videocam" size={11} color="#FFF" />
+                              <Text style={styles.videoBadgeText}>VIDEO</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 ))}
                 {editing && activeMedia.length < 9 && (
@@ -412,9 +464,48 @@ export default function ProfileScreen() {
           })()}
 
           {!editing && mediaItems.length === 0 && (
-            <Text style={styles.emptyNote}>No photos yet — tap Edit to add</Text>
+            <Text style={styles.emptyNote}>No photos or videos yet — tap Edit to add</Text>
           )}
         </View>
+
+        {pendingRequests.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Friend Requests</Text>
+            <View style={{ gap: 10 }}>
+              {pendingRequests.map(req => (
+                <View key={req.id} style={styles.requestRow}>
+                  <View style={styles.requestAvatar}>
+                    <Text style={styles.requestAvatarText}>
+                      {(requesterNames[req.fromUid] || "?")[0].toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={styles.requestName} numberOfLines={1}>
+                    {requesterNames[req.fromUid] || "Someone"}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.acceptBtn}
+                    onPress={async () => {
+                      await acceptFollowRequest(req.id);
+                      setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                      setFollowerCount(c => c + 1);
+                    }}
+                  >
+                    <Text style={styles.acceptBtnText}>Accept</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.declineBtn}
+                    onPress={async () => {
+                      await removeFollow(req.fromUid, uid!);
+                      setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                    }}
+                  >
+                    <Text style={styles.declineBtnText}>Decline</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* ── Stats ─────────────────────────────────────────────────── */}
         <View style={styles.card}>
@@ -485,6 +576,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
       </ScrollView>
+
     </SafeAreaView>
   );
 }
@@ -580,6 +672,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: "#E5E7EB", borderStyle: "dashed",
     justifyContent: "center", alignItems: "center", backgroundColor: "#F9FAFB",
   },
+  videoTile: {
+    borderRadius: 10, backgroundColor: "#1F2937",
+    justifyContent: "center", alignItems: "center",
+  },
+  videoBadge: {
+    position: "absolute", bottom: 6, left: 6,
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
+  },
+  videoBadgeText: { color: "#FFF", fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
@@ -611,4 +713,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderWidth: 1, borderColor: "#FEE2E2",
   },
   signOutText: { color: "#EF4444", fontWeight: "700", fontSize: 15 },
+
+  followStatsRow: {
+    flexDirection: "row", alignItems: "center",
+    marginTop: 12, marginBottom: 4,
+  },
+  followStat: { flex: 1, alignItems: "center" },
+  followStatValue: { fontSize: 20, fontWeight: "800", color: "#000" },
+  followStatLabel: { fontSize: 11, color: "#9CA3AF", marginTop: 2 },
+  followStatDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB", marginHorizontal: 8 },
+  requestRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+  },
+  requestAvatar: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: "#000", justifyContent: "center", alignItems: "center",
+  },
+  requestAvatarText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
+  requestName: { flex: 1, fontSize: 14, fontWeight: "600", color: "#000" },
+  acceptBtn: {
+    backgroundColor: "#000", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
+  },
+  acceptBtnText: { color: "#FFF", fontWeight: "700", fontSize: 13 },
+  declineBtn: {
+    borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
+  },
+  declineBtnText: { color: "#6B7280", fontWeight: "600", fontSize: 13 },
 });

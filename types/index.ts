@@ -3,6 +3,7 @@ export type CourtType = "beach" | "grass" | "indoor";
 export interface MediaItem {
   uri: string;
   landscape: boolean;
+  type?: "image" | "video";
 }
 
 export interface UserProfile {

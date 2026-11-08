@@ -89,7 +89,8 @@
           "savePhotosPermission": "Allow GO! to save clips to your photo library.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

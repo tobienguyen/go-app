@@ -56,7 +56,7 @@ interface JumpResult {
   videoPath: string | null;
 }
 
-const CONFIDENCE_THRESHOLD = 0.05;
+const CONFIDENCE_THRESHOLD = 0.3;
 const MODEL_SIZE = 192;
 
 const NET_HEIGHT_MENS = 94;
@@ -160,9 +160,6 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
 
   const tfModel = useTensorflowModel(MOVENET_MODEL, []);
   const modelReady = tfModel.state === "loaded";
-  // The loaded model is a native HostObject that can be used directly inside
-  // the frame-processor worklet (pattern from the react-native-fast-tflite docs).
-  const model = tfModel.state === "loaded" ? tfModel.model : undefined;
 
   // NitroModules HybridObjects can't cross the worklets-core runtime boundary —
   // neither as closure deps (serializer throws) nor via SharedValue (setter throws).
@@ -175,6 +172,7 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
   // Shared values for the VisionCamera Worker Runtime (react-native-worklets-core).
   // Reanimated shared values are NOT accessible from VisionCamera's Worker Runtime.
   const isBusy = useWorkletSharedValue(false);
+  const lastInferenceTime = useWorkletSharedValue(0);
   const facingShared = useWorkletSharedValue<"front" | "back">("back");
   useEffect(() => {
     facingShared.value = facing;
@@ -222,58 +220,65 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
     }
   }, []);
 
-  // Runs on the JS thread after inference finishes in the Worker Runtime.
-  // Only 51 plain numbers (17 kps × 3 floats) cross the createRunOnJS bridge —
-  // primitives are always supported, no ArrayBuffer transfer needed.
-  const updateKeypointsWC = useRunOnJS((kpFlat: number[], frameW: number, frameH: number) => {
-    const kps: Keypoint[] = [];
-    for (let i = 0; i < 17; i++) {
-      kps.push({ y: kpFlat[i * 3], x: kpFlat[i * 3 + 1], score: kpFlat[i * 3 + 2] });
+  // The model (NitroModules HybridObject) cannot cross the worklets-core runtime
+  // boundary in any form — not as a closure dep, not via SharedValue. So inference
+  // runs here on the JS thread. The worklet sends uint8 pixel data as a plain
+  // number[] (the only collection createRunOnJS supports; TypedArray → undefined,
+  // ArrayBuffer → rejected). Values are normalised to [0,1] before runSync.
+  const runInferenceWC = useRunOnJS((pixels: number[], frameW: number, frameH: number) => {
+    const model = modelRef.current;
+    if (!model) { isBusy.value = false; return; }
+    try {
+      const n = MODEL_SIZE * MODEL_SIZE * 3;
+      const input = new Float32Array(n);
+      // MoveNet Lightning TFLite (float16 variant) expects float32 in [0, 255] — do NOT normalize to [0,1]
+      for (let i = 0; i < n; i++) input[i] = pixels[i];
+      const outputs = model.runSync([input.buffer]);
+      if (!outputs?.[0]) { isBusy.value = false; return; }
+      const raw = new Float32Array(outputs[0]);
+      if (raw.length < 51) { isBusy.value = false; return; }
+      const kps: Keypoint[] = [];
+      for (let i = 0; i < 17; i++) {
+        kps.push({ y: raw[i * 3], x: raw[i * 3 + 1], score: raw[i * 3 + 2] });
+      }
+      const maxConf = kps.reduce((m, k) => Math.max(m, k.score), 0);
+      setDebugInfo(prev => ({ ...prev, frameW, frameH, maxConf, count: prev.count + 1, workletFiring: true }));
+      updateKeypoints(kps);
+    } catch (e: any) {
+      console.error("[Analyze] inference error:", e?.message ?? e);
+      setDebugInfo(prev => ({ ...prev, lastError: String(e?.message ?? e).slice(0, 80) }));
+    } finally {
+      isBusy.value = false;
     }
-    const maxConf = kps.reduce((m, k) => Math.max(m, k.score), 0);
-    setDebugInfo(prev => ({ ...prev, frameW, frameH, maxConf, count: prev.count + 1, workletFiring: true }));
-    updateKeypoints(kps);
-    isBusy.value = false;
   }, [updateKeypoints, isBusy]);
 
   const noteWorkletFiringWC = useRunOnJS(() => {
     setDebugInfo(prev => prev.workletFiring ? prev : { ...prev, workletFiring: true });
   }, []);
 
-  const logErrorWC = useRunOnJS((msg: string) => {
-    console.error("[Analyze worklet]", msg);
-    setDebugInfo(prev => ({ ...prev, lastError: msg.slice(0, 80) }));
-  }, []);
-
   const frameProcessor = useFrameProcessor((frame) => {
     "worklet";
     noteWorkletFiringWC();
-    if (isBusy.value) return;
-    const m = model;
-    if (!m) {
-      logErrorWC("model is null in worklet");
-      return;
-    }
+    // Hard cap at ~5 fps — the 110K number[] transfer is heavy and flooding the
+    // JS thread faster than it can finish each inference causes memory pressure.
+    const now = Date.now();
+    if (isBusy.value || now - lastInferenceTime.value < 200) return;
+    lastInferenceTime.value = now;
     isBusy.value = true;
-    const isFront = facingShared.value === "front";
-    try {
-      const resized = resize(frame, {
-        scale: { width: MODEL_SIZE, height: MODEL_SIZE },
-        pixelFormat: "rgb",
-        dataType: "float32",
-        rotation: debugRotationShared.value,
-        mirror: isFront,
-      });
-      const outputs = m.runSync([resized]);
-      const raw = new Float32Array(outputs[0]);
-      const kpFlat: number[] = [];
-      for (let i = 0; i < 17 * 3; i++) kpFlat.push(raw[i]);
-      updateKeypointsWC(kpFlat, frame.width, frame.height);
-    } catch (e: any) {
-      logErrorWC(String(e?.message ?? e));
-      isBusy.value = false;
-    }
-  }, [model, isBusy, facingShared, debugRotationShared, resize, updateKeypointsWC, noteWorkletFiringWC, logErrorWC]);
+
+    const resized = resize(frame, {
+      scale: { width: MODEL_SIZE, height: MODEL_SIZE },
+      pixelFormat: "rgb",
+      dataType: "uint8",
+      rotation: debugRotationShared.value,
+      mirror: facingShared.value === "front",
+    });
+    // Convert TypedArray → plain number[] so createRunOnJS can transfer it.
+    const n = MODEL_SIZE * MODEL_SIZE * 3;
+    const pixels: number[] = [];
+    for (let i = 0; i < n; i++) pixels.push(resized[i]);
+    runInferenceWC(pixels, frame.width, frame.height);
+  }, [isBusy, lastInferenceTime, facingShared, debugRotationShared, resize, runInferenceWC, noteWorkletFiringWC]);
 
   // ── Calibration ─────────────────────────────────────────────────────────────
   const captureCalibration = useCallback(() => {
@@ -564,7 +569,9 @@ function AnalyzeCameraView({ hasMedia }: { hasMedia: boolean }) {
         audio
       />
 
-      <SkeletonOverlay keypoints={keypoints} peakY={peakWristY} width={SW} height={SH} />
+      {phase !== "idle" && (
+        <SkeletonOverlay keypoints={keypoints} peakY={peakWristY} width={SW} height={SH} />
+      )}
 
       {/* Model loading spinner — shown until TFLite finishes initializing from local file */}
       {!modelReady && (
