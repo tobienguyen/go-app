@@ -1,11 +1,16 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Image, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 // The logo fox, animated. The logo is split into two layers (ball + fox) that
 // line up exactly when both are drawn at the same size and position.
 
 const FOX = require("../assets/images/brand/logo-fox.png");
 const BALL = require("../assets/images/brand/logo-ball.png");
+const LETTERS = [
+  require("../assets/images/brand/logo-g.png"),
+  require("../assets/images/brand/logo-o.png"),
+  require("../assets/images/brand/logo-bang.png"),
+];
 
 // t runs 0 -> 1; these turn it into a jump arc (x moves steadily, y rises then falls)
 const ARC_T = [0, 0.25, 0.5, 0.75, 1];
@@ -22,6 +27,7 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
   const foxOpacity = useRef(new Animated.Value(0)).current;
   const settle = useRef(new Animated.Value(1)).current;
   const fade = useRef(new Animated.Value(1)).current;
+  const letters = useRef(LETTERS.map(() => new Animated.Value(0))).current;
   const done = useRef(false);
 
   const finish = () => {
@@ -48,7 +54,11 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
         Animated.timing(settle, { toValue: 1.06, duration: 110, useNativeDriver: true }),
         Animated.spring(settle, { toValue: 1, friction: 4, tension: 140, useNativeDriver: true }),
       ]),
-      Animated.delay(350),
+      // G, then O, then !
+      Animated.stagger(170, letters.map(v =>
+        Animated.spring(v, { toValue: 1, friction: 5, tension: 140, useNativeDriver: true }),
+      )),
+      Animated.delay(450),
     ]).start(() => finish());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -66,6 +76,16 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
             source={BALL}
             style={[styles.layer, { transform: [{ translateY: ballY }, { scaleX: ballScaleX }, { scaleY: ballSquash }] }]}
           />
+          {LETTERS.map((src, i) => (
+            <Animated.Image
+              key={i}
+              source={src}
+              style={[styles.layer, {
+                opacity: letters[i].interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }),
+                transform: [{ translateY: letters[i].interpolate({ inputRange: [0, 1], outputRange: [size * 0.05, 0] }) }],
+              }]}
+            />
+          ))}
           <Animated.Image
             source={FOX}
             style={[styles.layer, {
@@ -76,42 +96,6 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
         </Animated.View>
       </Pressable>
     </Animated.View>
-  );
-}
-
-/** A small fox that leaps across `width` and lands on the right. Plays when `play` turns true. */
-export function FoxHop({ play, width, size = 72 }: { play: boolean; width: number; size?: number }) {
-  const t = useRef(new Animated.Value(0)).current;
-  const land = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (!play) { t.setValue(0); return; }
-    t.setValue(0);
-    Animated.sequence([
-      Animated.delay(250), // let the pass slide up first
-      Animated.timing(t, { toValue: 1, duration: 700, easing: Easing.linear, useNativeDriver: true }),
-      Animated.sequence([
-        Animated.timing(land, { toValue: 0.85, duration: 70, useNativeDriver: true }),
-        Animated.spring(land, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }),
-      ]),
-    ]).start();
-  }, [play, t, land]);
-
-  const x = t.interpolate({ inputRange: [0, 1], outputRange: [-size, width - size * 0.95] });
-  const y = t.interpolate({ inputRange: ARC_T, outputRange: ARC_Y.map(v => v * size * 1.1) });
-  const rotate = t.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["-25deg", "0deg", "12deg"] });
-
-  return (
-    <View style={{ height: size * 0.75, width }} pointerEvents="none">
-      <Animated.Image
-        source={FOX}
-        style={{
-          position: "absolute", bottom: -size * 0.12, width: size, height: size,
-          transform: [{ translateX: x }, { translateY: y }, { rotate }, { scaleY: land }],
-        }}
-        resizeMode="contain"
-      />
-    </View>
   );
 }
 
