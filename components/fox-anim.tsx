@@ -59,7 +59,7 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
       // fox leaps in from the left and lands on the ball
       Animated.parallel([
         Animated.timing(foxOpacity, { toValue: 1, duration: 160, useNativeDriver: true }),
-        Animated.timing(leap, { toValue: 1, duration: 1400, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(leap, { toValue: 1, duration: 1750, easing: Easing.linear, useNativeDriver: true }),
       ]),
       // little "landed" bounce of the whole logo
       Animated.sequence([
