@@ -12,7 +12,7 @@ import { auth, storage } from "../../config/firebaseConfig";
 import { getUser } from "../../services/users";
 import { subscribeFeed, createPost, toggleLike as toggleLikeApi } from "../../services/posts";
 import { Brand } from "../../constants/brand";
-import { CourtPin, CourtScene } from "../../components/brand-art";
+import { CourtPin } from "../../components/brand-art";
 import { F } from "../../constants/fonts";
 
 const AVATAR_COLORS = ["#111111"];
@@ -293,7 +293,6 @@ export default function BrowseScreen() {
               </View>
               <Ionicons name="chevron-forward" size={16} color="#A8A49C" />
             </View>
-            {item.sessionType ? <CourtScene type={item.sessionType} height={96} style={{ marginVertical: 6 }} /> : null}
             <Text style={styles.sessionBannerTitle}>{item.content}</Text>
             <View style={styles.sessionMeta}>
               {item.sessionLocation ? (
