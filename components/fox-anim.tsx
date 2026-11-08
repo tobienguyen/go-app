@@ -1,16 +1,26 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 
-// The logo fox, animated. The logo is split into two layers (ball + fox) that
-// line up exactly when both are drawn at the same size and position.
+// The logo fox, animated. The logo is split into layers (ball, letters, and
+// three hand-drawn jump poses) that line up exactly at the same size/position.
 
-const FOX = require("../assets/images/brand/logo-fox.png");
-const BALL = require("../assets/images/brand/logo-ball.png");
+const BALL = require("../assets/images/brand/intro/ball.png");
 const LETTERS = [
-  require("../assets/images/brand/logo-g.png"),
-  require("../assets/images/brand/logo-o.png"),
-  require("../assets/images/brand/logo-bang.png"),
+  require("../assets/images/brand/intro/g.png"),
+  require("../assets/images/brand/intro/o.png"),
+  require("../assets/images/brand/intro/bang.png"),
 ];
+// Jump poses: tails streaming back -> mid -> landing (the logo pose)
+const POSES = [
+  require("../assets/images/brand/intro/fox-1.png"),
+  require("../assets/images/brand/intro/fox-2.png"),
+  require("../assets/images/brand/intro/fox-3.png"),
+];
+// Which pose shows at each point of the leap (0 = takeoff, 1 = landed)
+const POSE_WINDOWS: [number, number][] = [[0, 0.45], [0.45, 0.8], [0.8, 1.01]];
+// The intro canvas is a bit larger than the logo's (room for the tails), so
+// scale it up to keep the ball the same size on screen.
+const CANVAS_SCALE = 555 / 489;
 
 // t runs 0 -> 1; these turn it into a jump arc (x moves steadily, y rises then falls)
 const ARC_T = [0, 0.25, 0.5, 0.75, 1];
@@ -19,7 +29,7 @@ const ARC_Y = [0, -0.75, -1, -0.75, 0];
 /** Launch animation: the ball drops in, the fox leaps onto it, then it fades into the app. */
 export function FoxIntro({ onDone }: { onDone: () => void }) {
   const { width, height } = useWindowDimensions();
-  const size = Math.min(width * 0.6, 260);
+  const size = Math.min(width * 0.6, 260) * CANVAS_SCALE;
 
   const ballY = useRef(new Animated.Value(-height * 0.6)).current;
   const ballSquash = useRef(new Animated.Value(1)).current;
@@ -86,13 +96,25 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
               }]}
             />
           ))}
-          <Animated.Image
-            source={FOX}
-            style={[styles.layer, {
-              opacity: foxOpacity,
-              transform: [{ translateX: foxX }, { translateY: foxY }, { rotate: foxRotate }],
-            }]}
-          />
+          {POSES.map((src, i) => {
+            const [from, to] = POSE_WINDOWS[i];
+            // hard cut between poses, like a flipbook
+            const visible = leap.interpolate({
+              inputRange: [-1, from - 0.0001, from, to - 0.0001, to, 2],
+              outputRange: [0, 0, 1, 1, 0, 0],
+              extrapolate: "clamp",
+            });
+            return (
+              <Animated.Image
+                key={i}
+                source={src}
+                style={[styles.layer, {
+                  opacity: Animated.multiply(foxOpacity, visible),
+                  transform: [{ translateX: foxX }, { translateY: foxY }, { rotate: foxRotate }],
+                }]}
+              />
+            );
+          })}
         </Animated.View>
       </Pressable>
     </Animated.View>
