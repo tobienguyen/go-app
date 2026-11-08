@@ -10,6 +10,7 @@ import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { auth } from "../../config/firebaseConfig";
 import { handleGoogleSignIn, handleAppleSignIn } from "../../utils/socialAuth";
+import { F } from "../../constants/fonts";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -187,12 +188,13 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF", paddingHorizontal: 20 },
   logoHeader: { marginTop: 60, marginBottom: 40, alignItems: "center" },
-  logoTextBold: { fontSize: 48, fontWeight: "800", letterSpacing: -1.5, color: "#000000" },
-  logoTextItalic: { fontStyle: "italic", fontWeight: "900", color: "#000000" },
+  logoTextBold: { fontFamily: F.w800, fontSize: 48, letterSpacing: -1.5, color: "#000000" },
+  logoTextItalic: { fontFamily: F.w900, fontStyle: "italic", color: "#000000" },
   content: { flex: 1, paddingHorizontal: 15 },
-  pageTitle: { fontSize: 28, fontWeight: "700", color: "#000000", textAlign: "center", marginBottom: 8 },
-  pageSubtitle: { fontSize: 16, color: "#666666", textAlign: "center", marginBottom: 30 },
+  pageTitle: { fontFamily: F.w700, fontSize: 28, color: "#000000", textAlign: "center", marginBottom: 8 },
+  pageSubtitle: { fontFamily: F.w400, fontSize: 16, color: "#666666", textAlign: "center", marginBottom: 30 },
   input: {
+    fontFamily: F.w400,
     backgroundColor: "#F5F3EF", color: "#000", padding: 16,
     borderRadius: 12, fontSize: 16, marginBottom: 16,
     borderWidth: 1, borderColor: "#ECE9E3",
@@ -201,10 +203,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000", padding: 16, borderRadius: 12,
     alignItems: "center", marginBottom: 20,
   },
-  buttonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
+  buttonText: { fontFamily: F.w700, color: "#FFFFFF", fontSize: 16 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 15 },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
-  dividerText: { color: "#A8A49C", paddingHorizontal: 10, fontSize: 14 },
+  dividerText: { fontFamily: F.w400, color: "#A8A49C", paddingHorizontal: 10, fontSize: 14 },
   socialButtons: { marginTop: 10, gap: 12 },
   socialButton: {
     backgroundColor: "#FFFFFF", padding: 16, borderRadius: 12,
@@ -212,8 +214,8 @@ const styles = StyleSheet.create({
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },
-  socialButtonText: { color: "#000000", fontWeight: "600", fontSize: 16 },
+  socialButtonText: { fontFamily: F.w600, color: "#000000", fontSize: 16 },
   signUpLinkContainer: { marginTop: 25, alignItems: "center" },
-  signUpText: { fontSize: 15, color: "#666666" },
-  signUpSubLink: { color: "#000000", fontWeight: "700", textDecorationLine: "underline" },
+  signUpText: { fontFamily: F.w400, fontSize: 15, color: "#666666" },
+  signUpSubLink: { fontFamily: F.w700, color: "#000000", textDecorationLine: "underline" },
 });

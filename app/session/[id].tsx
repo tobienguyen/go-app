@@ -12,6 +12,8 @@ import { getSession, joinSession, leaveSession } from "../../services/sessions";
 import { CourtPulseCard } from "../../components/court-pulse";
 import { Brand } from "../../constants/brand";
 import { CourtPin, CourtScene, SpotsBlobs } from "../../components/brand-art";
+import { GamePass, GamePassModal } from "../../components/game-pass";
+import { F } from "../../constants/fonts";
 
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 
@@ -22,6 +24,7 @@ export default function SessionDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [pulseKey, setPulseKey] = useState(0);
+  const [showPass, setShowPass] = useState(false);
   const uid = auth.currentUser?.uid ?? "";
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function SessionDetailScreen() {
       const updated = joined ? await leaveSession(session.id) : await joinSession(session.id);
       if (updated) setSession(updated);
       setPulseKey(k => k + 1); // Court Pulse picks up the new event right away
-      if (!joined) Alert.alert("You're in! 🏐", "See you on the court.");
+      if (!joined) setShowPass(true);
     } catch (e: any) {
       Alert.alert("Couldn't update", e?.message ?? "Try again.");
     } finally {
@@ -135,6 +138,10 @@ export default function SessionDetailScreen() {
             <SpotsBlobs filled={session.spotsFilled ?? 0} total={session.maxPlayers} size={26} max={16} />
           </View>
 
+          {joined && (
+            <GamePass session={session} playerName={auth.currentUser?.displayName || "You"} uid={uid} />
+          )}
+
           <View style={styles.detailsCard}>
             {session.sessionDate && (
               <DetailRow
@@ -197,6 +204,13 @@ export default function SessionDetailScreen() {
           )}
         </TouchableOpacity>
       </View>
+      <GamePassModal
+        visible={showPass}
+        session={session}
+        playerName={auth.currentUser?.displayName || "You"}
+        uid={uid}
+        onClose={() => setShowPass(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -221,7 +235,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 18, color: "#000" },
   scroll: { paddingBottom: 100 },
   mapWrapper: { height: 220, position: "relative" },
   map: { ...StyleSheet.absoluteFillObject },
@@ -232,19 +246,19 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 6,
   },
   scene: { marginBottom: 12 },
-  typeBadgeText: { color: "#111111", fontWeight: "800", fontSize: 13, letterSpacing: 0.5 },
+  typeBadgeText: { fontFamily: F.w800, color: "#111111", fontSize: 13, letterSpacing: 0.5 },
   content: { padding: 16, gap: 14 },
-  title: { fontSize: 24, fontWeight: "800", color: "#000", lineHeight: 30 },
+  title: { fontFamily: F.w800, fontSize: 24, color: "#000", lineHeight: 30 },
   hostRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  hostText: { fontSize: 14, color: "#7D7A73", fontWeight: "500" },
+  hostText: { fontFamily: F.w500, fontSize: 14, color: "#7D7A73", },
   spotsCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   spotsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  spotsLeft: { fontSize: 16, fontWeight: "700" },
-  spotsFraction: { fontSize: 13, color: "#A8A49C", fontWeight: "500" },
+  spotsLeft: { fontFamily: F.w700, fontSize: 16, },
+  spotsFraction: { fontFamily: F.w500, fontSize: 13, color: "#A8A49C", },
   progressTrack: {
     height: 8, backgroundColor: "#F5F3EF", borderRadius: 4, overflow: "hidden",
   },
@@ -257,15 +271,15 @@ const styles = StyleSheet.create({
   },
   detailRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   detailIcon: { marginTop: 2 },
-  detailLabel: { fontSize: 11, color: "#A8A49C", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  detailValue: { fontSize: 15, color: "#111111", fontWeight: "600" },
+  detailLabel: { fontFamily: F.w600, fontSize: 11, color: "#A8A49C", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  detailValue: { fontFamily: F.w600, fontSize: 15, color: "#111111", },
   descriptionCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  descriptionLabel: { fontSize: 13, fontWeight: "700", color: "#000", marginBottom: 8 },
-  descriptionText: { fontSize: 15, color: "#3A3833", lineHeight: 22 },
+  descriptionLabel: { fontFamily: F.w700, fontSize: 13, color: "#000", marginBottom: 8 },
+  descriptionText: { fontFamily: F.w400, fontSize: 15, color: "#3A3833", lineHeight: 22 },
   footer: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -273,13 +287,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   footerPrice: {},
-  footerPriceValue: { fontSize: 22, fontWeight: "800", color: "#000" },
-  footerPriceSub: { fontSize: 12, color: "#A8A49C", fontWeight: "500" },
+  footerPriceValue: { fontFamily: F.w800, fontSize: 22, color: "#000" },
+  footerPriceSub: { fontFamily: F.w500, fontSize: 12, color: "#A8A49C", },
   joinBtn: {
     backgroundColor: "#000", paddingHorizontal: 32, paddingVertical: 14,
     borderRadius: 14,
   },
   joinBtnFull: { backgroundColor: "#A8A49C" },
   joinBtnJoined: { backgroundColor: "#D0341A" },
-  joinBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  joinBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 16 },
 });

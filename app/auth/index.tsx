@@ -18,6 +18,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { auth } from "../../config/firebaseConfig";
 import { handleGoogleSignIn, handleAppleSignIn } from "../../utils/socialAuth";
+import { F } from "../../constants/fonts";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -156,10 +157,12 @@ const styles = StyleSheet.create({
   logoImage: { width: 180, height: 180 },
   content: { width: "100%", paddingHorizontal: 30 },
   pageSubtitle: {
+    fontFamily: F.w600,
     fontSize: 12, color: "#666666", textAlign: "center",
-    marginBottom: 25, letterSpacing: 2, fontWeight: "600",
+    marginBottom: 25, letterSpacing: 2,
   },
   input: {
+    fontFamily: F.w400,
     backgroundColor: "#F5F3EF", color: "#000", padding: 16,
     borderRadius: 12, fontSize: 16, marginBottom: 16,
     borderWidth: 1, borderColor: "#ECE9E3",
@@ -168,10 +171,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", height: 60, justifyContent: "center",
   },
-  buttonText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 1 },
+  buttonText: { fontFamily: F.w800, color: "#FFF", fontSize: 16, letterSpacing: 1 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
-  dividerText: { color: "#A8A49C", paddingHorizontal: 10, fontSize: 12, fontWeight: "700" },
+  dividerText: { fontFamily: F.w700, color: "#A8A49C", paddingHorizontal: 10, fontSize: 12, },
   socialButtons: { gap: 12 },
   socialButton: {
     backgroundColor: "#FFF", padding: 16, borderRadius: 12,
@@ -179,5 +182,5 @@ const styles = StyleSheet.create({
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },
-  socialButtonText: { color: "#000", fontWeight: "600", fontSize: 15 },
+  socialButtonText: { fontFamily: F.w600, color: "#000", fontSize: 15 },
 });

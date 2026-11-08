@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getCourtPulse, CourtPulse } from "../services/insights";
+import { F } from "../constants/fonts";
 
 // Court Pulse: when this court is busiest, from the TimescaleDB continuous
 // aggregate over every join and check-in. `refreshKey` reloads it (e.g. right
@@ -102,18 +103,18 @@ export function CourtPulseCard({ courtName, color, refreshKey = 0 }: {
 const styles = StyleSheet.create({
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, marginBottom: 14 },
   headerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  title: { fontSize: 15, fontWeight: "800", color: "#000" },
+  title: { fontFamily: F.w800, fontSize: 15, color: "#000" },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#D0341A", marginLeft: 4 },
-  liveText: { fontSize: 11, fontWeight: "700", color: "#D0341A", textTransform: "uppercase" },
-  subtitle: { fontSize: 13, color: "#7D7A73", marginTop: 4, marginBottom: 12 },
-  bold: { fontWeight: "700", color: "#000" },
-  empty: { fontSize: 13, color: "#A8A49C", marginTop: 6 },
+  liveText: { fontFamily: F.w700, fontSize: 11, color: "#D0341A", textTransform: "uppercase" },
+  subtitle: { fontFamily: F.w400, fontSize: 13, color: "#7D7A73", marginTop: 4, marginBottom: 12 },
+  bold: { fontFamily: F.w700, color: "#000" },
+  empty: { fontFamily: F.w400, fontSize: 13, color: "#A8A49C", marginTop: 6 },
   chart: { flexDirection: "row", alignItems: "flex-end", height: 72, gap: 3 },
   barSlot: { flex: 1, height: "100%", justifyContent: "flex-end" },
   bar: { width: "100%", borderRadius: 3 },
   axis: { flexDirection: "row", justifyContent: "space-between", marginTop: 4 },
-  axisLabel: { fontSize: 10, color: "#A8A49C" },
+  axisLabel: { fontFamily: F.w400, fontSize: 10, color: "#A8A49C" },
   statsRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 },
-  stat: { fontSize: 12, color: "#7D7A73", flex: 1 },
-  change: { fontSize: 12, fontWeight: "700" },
+  stat: { fontFamily: F.w400, fontSize: 12, color: "#7D7A73", flex: 1 },
+  change: { fontFamily: F.w700, fontSize: 12, },
 });

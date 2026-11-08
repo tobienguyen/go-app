@@ -6,12 +6,12 @@ import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../config/firebaseConfig';
 import { getLeaderboard, LeaderboardEntry } from '../../services/insights';
+import { F } from "../../constants/fonts";
 
 // Weekly leaderboard: ranked by games played this week (check-ins), with games
 // hosted as the tiebreaker. Data comes from the player_activity_weekly
 // continuous aggregate in Tiger Cloud and resets every Monday.
 
-const MEDALS = ['🥇', '🥈', '🥉'];
 const AVATAR_COLORS = ['#111111'];
 
 function avatarColor(uid: string): string {
@@ -58,7 +58,7 @@ export default function LeaderboardScreen() {
     const isMe = item.uid === uid;
     return (
       <View style={[styles.row, isMe && styles.rowMe]}>
-        <Text style={styles.rank}>{item.rank <= 3 ? MEDALS[item.rank - 1] : item.rank}</Text>
+        <Text style={[styles.rank, item.rank === 1 && styles.rankFirst]}>{item.rank}</Text>
         <View style={[styles.avatar, { backgroundColor: avatarColor(item.uid) }]}>
           <Text style={styles.avatarText}>{initials(item.name)}</Text>
         </View>
@@ -121,32 +121,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#ECE9E3',
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#000' },
-  headerSub: { fontSize: 12, color: '#7D7A73', marginTop: 2 },
+  headerTitle: { fontFamily: F.w800, fontSize: 20, color: '#000' },
+  headerSub: { fontFamily: F.w400, fontSize: 12, color: '#7D7A73', marginTop: 2 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 12, gap: 8, paddingBottom: 30 },
   explainer: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#ECE9E3', borderRadius: 12, padding: 12, marginBottom: 4,
   },
-  explainerText: { flex: 1, fontSize: 13, color: '#3A3833', fontWeight: '500' },
+  explainerText: { fontFamily: F.w500, flex: 1, fontSize: 13, color: '#3A3833', },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#FFF', borderRadius: 14, padding: 12,
     borderWidth: 2, borderColor: 'transparent',
   },
   rowMe: { borderColor: '#000' },
-  rank: { width: 28, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#3A3833' },
+  rank: { fontFamily: F.w800, width: 28, textAlign: 'center', fontSize: 16, color: '#3A3833' },
+  rankFirst: { color: '#D0341A' },
   avatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+  avatarText: { fontFamily: F.w800, color: '#FFF', fontSize: 14 },
   nameCol: { flex: 1 },
-  name: { fontSize: 15, fontWeight: '700', color: '#000' },
-  meta: { fontSize: 12, color: '#7D7A73', marginTop: 2 },
+  name: { fontFamily: F.w700, fontSize: 15, color: '#000' },
+  meta: { fontFamily: F.w400, fontSize: 12, color: '#7D7A73', marginTop: 2 },
   scoreCol: { alignItems: 'center', minWidth: 48 },
-  score: { fontSize: 20, fontWeight: '800', color: '#000' },
-  scoreLabel: { fontSize: 10, color: '#A8A49C', textTransform: 'uppercase', fontWeight: '600' },
+  score: { fontFamily: F.w800, fontSize: 20, color: '#000' },
+  scoreLabel: { fontFamily: F.w600, fontSize: 10, color: '#A8A49C', textTransform: 'uppercase', },
   empty: { alignItems: 'center', paddingVertical: 60 },
-  emptyEmoji: { fontSize: 44, marginBottom: 10 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#000', marginBottom: 4 },
-  emptySub: { fontSize: 14, color: '#A8A49C' },
+  emptyEmoji: { fontFamily: F.w400, fontSize: 44, marginBottom: 10 },
+  emptyTitle: { fontFamily: F.w700, fontSize: 17, color: '#000', marginBottom: 4 },
+  emptySub: { fontFamily: F.w400, fontSize: 14, color: '#A8A49C' },
 });

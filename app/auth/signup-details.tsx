@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
 import { setPendingSkillLevel } from "../../services/users";
+import { F } from "../../constants/fonts";
 
 const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", "Advanced", "Pro"];
 
@@ -121,11 +122,12 @@ export default function SignupDetails() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
   header: { padding: 30, marginTop: 20 },
-  title: { fontSize: 28, fontWeight: "800", color: "#000" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 5 },
+  title: { fontFamily: F.w800, fontSize: 28, color: "#000" },
+  subtitle: { fontFamily: F.w400, fontSize: 14, color: "#666", marginTop: 5 },
   form: { paddingHorizontal: 30 },
-  label: { fontSize: 14, fontWeight: "600", color: "#000", marginBottom: 8, marginTop: 15 },
+  label: { fontFamily: F.w600, fontSize: 14, color: "#000", marginBottom: 8, marginTop: 15 },
   input: {
+    fontFamily: F.w400,
     backgroundColor: "#F5F3EF", padding: 16, borderRadius: 12,
     fontSize: 16, borderWidth: 1, borderColor: "#ECE9E3", color: "#000",
   },
@@ -135,11 +137,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#ECE9E3", alignItems: "center",
   },
   skillBtnActive: { backgroundColor: "#000", borderColor: "#000" },
-  skillBtnText: { color: "#666", fontWeight: "600" },
+  skillBtnText: { fontFamily: F.w600, color: "#666", },
   skillBtnTextActive: { color: "#FFF" },
   mainButton: {
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", marginTop: 40, height: 60, justifyContent: "center",
   },
-  mainButtonText: { color: "#FFF", fontWeight: "700", fontSize: 16 },
+  mainButtonText: { fontFamily: F.w700, color: "#FFF", fontSize: 16 },
 });

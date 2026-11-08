@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { createSession, localDateString } from "../services/sessions";
 import { CourtScene } from "../components/brand-art";
+import { F } from "../constants/fonts";
 
 const { height } = Dimensions.get("window");
 
@@ -117,7 +118,7 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
           <View key={i} style={{ height: ITEM_H, justifyContent: "center", alignItems: "center" }}>
             <Text style={{
               fontSize: i === activeIdx ? 22 : 18,
-              fontWeight: i === activeIdx ? "700" : "400",
+              fontFamily: i === activeIdx ? F.w700 : F.w400,
               color: i === activeIdx ? "#000" : "#A8A49C",
             }}>
               {item}
@@ -560,10 +561,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 18, color: "#000" },
   scroll: { paddingBottom: 20 },
   mapSection: { backgroundColor: "#FFF", marginBottom: 12, padding: 16 },
-  mapLabel: { fontSize: 14, fontWeight: "600", color: "#000", marginBottom: 10 },
+  mapLabel: { fontFamily: F.w600, fontSize: 14, color: "#000", marginBottom: 10 },
   mapWrapper: { borderRadius: 14, overflow: "hidden", height: height * 0.28 },
   map: { flex: 1 },
   mapOverlay: {
@@ -571,13 +572,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F3EF", justifyContent: "center", alignItems: "center", zIndex: 10,
   },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  addressText: { fontSize: 13, color: "#7D7A73", flex: 1 },
-  addressHint: { fontSize: 13, color: "#A8A49C", marginTop: 10, textAlign: "center" },
+  addressText: { fontFamily: F.w400, fontSize: 13, color: "#7D7A73", flex: 1 },
+  addressHint: { fontFamily: F.w400, fontSize: 13, color: "#A8A49C", marginTop: 10, textAlign: "center" },
   formSection: { backgroundColor: "#FFF", padding: 16 },
   field: { marginBottom: 22 },
-  label: { fontSize: 14, fontWeight: "700", color: "#000", marginBottom: 10 },
-  labelOptional: { fontSize: 12, color: "#A8A49C", fontWeight: "400" },
+  label: { fontFamily: F.w700, fontSize: 14, color: "#000", marginBottom: 10 },
+  labelOptional: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", },
   input: {
+    fontFamily: F.w400,
     backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, padding: 14, fontSize: 15, color: "#000",
   },
@@ -593,10 +595,10 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1.5, borderColor: "#ECE9E3", backgroundColor: "#FFF",
   },
   courtTileActive: { borderColor: "#D0341A", borderWidth: 2 },
-  courtTileTextActive: { color: "#111111", fontWeight: "800" },
+  courtTileTextActive: { fontFamily: F.w800, color: "#111111", },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
-  chipIcon: { fontSize: 14 },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
+  chipIcon: { fontFamily: F.w400, fontSize: 14 },
+  chipText: { fontFamily: F.w600, fontSize: 13, color: "#3A3833" },
   chipTextActive: { color: "#FFF" },
 
   dropdownBtn: {
@@ -604,11 +606,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14,
   },
-  dropdownBtnText: { fontSize: 15, fontWeight: "600", color: "#000" },
+  dropdownBtnText: { fontFamily: F.w600, fontSize: 15, color: "#000" },
 
   timeLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   durationBadge: { backgroundColor: "#000", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
-  durationBadgeText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  durationBadgeText: { fontFamily: F.w700, color: "#FFF", fontSize: 12, },
   timeRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   timeTrigger: {
     flex: 1, flexDirection: "row", alignItems: "center", gap: 8,
@@ -616,28 +618,28 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingHorizontal: 12, paddingVertical: 13,
   },
   timeTriggerFilled: { borderColor: "#000", backgroundColor: "#FFF" },
-  timeTriggerText: { fontSize: 14, fontWeight: "500", color: "#A8A49C" },
-  timeTriggerTextFilled: { color: "#000", fontWeight: "600" },
-  timeError: { fontSize: 12, color: "#D0341A", marginTop: 6 },
+  timeTriggerText: { fontFamily: F.w500, fontSize: 14, color: "#A8A49C" },
+  timeTriggerTextFilled: { fontFamily: F.w600, color: "#000", },
+  timeError: { fontFamily: F.w400, fontSize: 12, color: "#D0341A", marginTop: 6 },
 
   sliderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
   sliderValueBadge: { backgroundColor: "#000", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  sliderValueText: { color: "#FFF", fontWeight: "800", fontSize: 14 },
+  sliderValueText: { fontFamily: F.w800, color: "#FFF", fontSize: 14 },
   slider: { width: "100%", height: 40 },
   sliderTicks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4, marginTop: -4 },
-  sliderTick: { fontSize: 11, color: "#A8A49C", fontWeight: "500" },
+  sliderTick: { fontFamily: F.w500, fontSize: 11, color: "#A8A49C", },
 
   priceRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  priceDollar: { fontSize: 18, fontWeight: "700", color: "#000" },
+  priceDollar: { fontFamily: F.w700, fontSize: 18, color: "#000" },
   freeBtn: { marginTop: 8 },
-  freeBtnText: { fontSize: 13, color: "#7D7A73", fontWeight: "600" },
+  freeBtnText: { fontFamily: F.w600, fontSize: 13, color: "#7D7A73", },
 
   footer: {
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   submitBtn: { backgroundColor: "#000", paddingVertical: 18, borderRadius: 14, alignItems: "center" },
-  submitBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 0.5 },
+  submitBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 16, letterSpacing: 0.5 },
 });
 
 const modal = StyleSheet.create({
@@ -652,19 +654,19 @@ const modal = StyleSheet.create({
     shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
-  title: { fontSize: 17, fontWeight: "800", color: "#000", marginBottom: 20 },
+  title: { fontFamily: F.w800, fontSize: 17, color: "#000", marginBottom: 20 },
   wheelRow: {
     flexDirection: "row", alignItems: "center", gap: 4,
     marginBottom: 24,
   },
-  colon: { fontSize: 28, fontWeight: "700", color: "#000", marginBottom: 4, paddingHorizontal: 2 },
+  colon: { fontFamily: F.w700, fontSize: 28, color: "#000", marginBottom: 4, paddingHorizontal: 2 },
   confirmBtn: {
     backgroundColor: "#000", width: "100%", paddingVertical: 15,
     borderRadius: 14, alignItems: "center", marginBottom: 10,
   },
-  confirmText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  confirmText: { fontFamily: F.w800, color: "#FFF", fontSize: 16 },
   cancelTouch: { paddingVertical: 6 },
-  cancelText: { color: "#A8A49C", fontSize: 14, fontWeight: "600" },
+  cancelText: { fontFamily: F.w600, color: "#A8A49C", fontSize: 14, },
 
   dropdownCard: {
     backgroundColor: "#FFF", borderRadius: 16,
@@ -678,6 +680,6 @@ const modal = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
   dropdownItemActive: { backgroundColor: "#000" },
-  dropdownItemText: { fontSize: 15, fontWeight: "500", color: "#3A3833" },
-  dropdownItemTextActive: { color: "#FFF", fontWeight: "700" },
+  dropdownItemText: { fontFamily: F.w500, fontSize: 15, color: "#3A3833" },
+  dropdownItemTextActive: { fontFamily: F.w700, color: "#FFF", },
 });

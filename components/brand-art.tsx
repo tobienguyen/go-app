@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Image, Animated, Text, StyleSheet, ImageStyle, StyleProp } from "react-native";
+import { F } from "../constants/fonts";
 
 // Hand-drawn GO! artwork and the small components built from it.
 
@@ -101,5 +102,5 @@ const styles = StyleSheet.create({
   tabIconIdle: { opacity: 0.35 },
   tabDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#D0341A", marginTop: 3 },
   spotsRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 3 },
-  more: { fontSize: 12, fontWeight: "700", color: "#7D7A73", marginLeft: 4 },
+  more: { fontFamily: F.w700, fontSize: 12, color: "#7D7A73", marginLeft: 4 },
 });

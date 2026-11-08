@@ -13,6 +13,7 @@ import { getUser } from "../../services/users";
 import { subscribeFeed, createPost, toggleLike as toggleLikeApi } from "../../services/posts";
 import { Brand } from "../../constants/brand";
 import { CourtPin, CourtScene } from "../../components/brand-art";
+import { F } from "../../constants/fonts";
 
 const AVATAR_COLORS = ["#111111"];
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
@@ -431,15 +432,16 @@ const styles = StyleSheet.create({
     width: 42, height: 42, borderRadius: 21,
     justifyContent: "center", alignItems: "center",
   },
-  createAvatarText: { color: "#FFF", fontWeight: "700", fontSize: 13 },
+  createAvatarText: { fontFamily: F.w700, color: "#FFF", fontSize: 13 },
   composeRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
   createInput: {
     flex: 1, paddingHorizontal: 16, paddingVertical: 10,
     borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3",
   },
-  createInputText: { color: "#A8A49C", fontSize: 14 },
+  createInputText: { fontFamily: F.w400, color: "#A8A49C", fontSize: 14 },
   inlineImageBtn: { padding: 4 },
   composeInput: {
+    fontFamily: F.w400,
     paddingHorizontal: 16, paddingVertical: 10,
     borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
     fontSize: 15, color: "#000", minHeight: 60,
@@ -452,23 +454,23 @@ const styles = StyleSheet.create({
   },
   composeActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, alignItems: "center" },
   imagePickerBtn: { marginRight: "auto" },
-  cancelBtn: { fontSize: 14, color: "#A8A49C", fontWeight: "600" },
+  cancelBtn: { fontFamily: F.w600, fontSize: 14, color: "#A8A49C", },
   postBtn: {
     backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 8,
     borderRadius: 20, minWidth: 64, alignItems: "center",
   },
-  postBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
+  postBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 14 },
   postCard: { backgroundColor: "#FFF", marginBottom: 8, padding: 16 },
   postHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12, gap: 10 },
   avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
-  avatarText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
+  avatarText: { fontFamily: F.w700, color: "#FFF", fontSize: 15 },
   postMeta: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
-  posterName: { fontSize: 15, fontWeight: "700", color: "#000" },
+  posterName: { fontFamily: F.w700, fontSize: 15, color: "#000" },
   badge: { backgroundColor: "#F5F3EF", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  badgeText: { fontSize: 11, fontWeight: "600", color: "#7D7A73" },
-  postTime: { fontSize: 12, color: "#A8A49C", marginTop: 2 },
-  postContent: { fontSize: 15, color: "#111111", lineHeight: 22, marginBottom: 10 },
+  badgeText: { fontFamily: F.w600, fontSize: 11, color: "#7D7A73" },
+  postTime: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", marginTop: 2 },
+  postContent: { fontFamily: F.w400, fontSize: 15, color: "#111111", lineHeight: 22, marginBottom: 10 },
   postImage: { width: "100%", height: 220, borderRadius: 12, marginBottom: 12 },
   sessionBanner: {
     backgroundColor: "#FAF9F6", borderRadius: 12, padding: 14,
@@ -482,19 +484,19 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4,
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
   },
-  sessionTypeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
-  sessionBannerTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 8 },
+  sessionTypeText: { fontFamily: F.w700, fontSize: 11, letterSpacing: 0.5 },
+  sessionBannerTitle: { fontFamily: F.w700, fontSize: 15, color: "#000", marginBottom: 8 },
   sessionMeta: { gap: 4, marginBottom: 8 },
   sessionMetaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  sessionMetaText: { fontSize: 13, color: "#7D7A73" },
-  sessionTapHint: { fontSize: 11, color: "#A8A49C", fontWeight: "500" },
+  sessionMetaText: { fontFamily: F.w400, fontSize: 13, color: "#7D7A73" },
+  sessionTapHint: { fontFamily: F.w500, fontSize: 11, color: "#A8A49C", },
   postActions: {
     flexDirection: "row", gap: 20,
     paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionText: { fontSize: 14, color: "#7D7A73", fontWeight: "500" },
+  actionText: { fontFamily: F.w500, fontSize: 14, color: "#7D7A73", },
   emptyState: { alignItems: "center", paddingVertical: 60 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 15, color: "#A8A49C", fontWeight: "500" },
+  emptyEmoji: { fontFamily: F.w400, fontSize: 48, marginBottom: 16 },
+  emptyText: { fontFamily: F.w500, fontSize: 15, color: "#A8A49C", },
 });

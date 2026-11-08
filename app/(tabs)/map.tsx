@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  View, Text, StyleSheet, SafeAreaView, TextInput, Keyboard,
+  View, Text, StyleSheet, SafeAreaView, TextInput, Keyboard, Image, Platform,
   FlatList, TouchableOpacity, Dimensions, Alert, ActivityIndicator,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
@@ -12,8 +12,9 @@ import { subscribeSessions } from "../../services/sessions";
 import { askGo } from "../../services/insights";
 import { Brand } from "../../constants/brand";
 import { CourtPin, SpotsBlobs } from "../../components/brand-art";
+import { F } from "../../constants/fonts";
 
-const { height } = Dimensions.get("window");
+const MAP_FRAME = require("../../assets/images/brand/map-frame.png");
 
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 type SessionType = "beach" | "grass" | "indoor";
@@ -288,22 +289,31 @@ export default function MapScreen() {
         </View>
       )}
 
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={initialRegion}
-        showsUserLocation
-        showsMyLocationButton={false}
-        onPress={closeDropdowns}
-      >
-        {filtered.map(session => (
-          <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
-            <View style={[styles.pin, selectedId === session.id && styles.pinSelected]}>
-              <CourtPin type={session.type} size={selectedId === session.id ? 30 : 24} />
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      {/* The map sits inside the hand-drawn window frame */}
+      <View style={styles.mapFrame}>
+        <View style={styles.mapWindow}>
+          <MapView
+            ref={mapRef}
+            style={StyleSheet.absoluteFill}
+            mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
+            initialRegion={initialRegion}
+            showsUserLocation
+            showsMyLocationButton={false}
+            onPress={closeDropdowns}
+          >
+            {filtered.map(session => (
+              <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
+                <View style={[styles.pin, selectedId === session.id && styles.pinSelected]}>
+                  <CourtPin type={session.type} size={selectedId === session.id ? 30 : 24} />
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Image source={MAP_FRAME} style={styles.mapFrameArt} resizeMode="stretch" />
+        </View>
+      </View>
 
       <View style={styles.filterBar}>
         <View style={[styles.dropdownWrapper, dayDropdownOpen && { zIndex: 20 }]}>
@@ -428,29 +438,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
-  headerTitle: { fontSize: 20, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 20, color: "#000" },
   addBtn: {
     backgroundColor: "#000", width: 34, height: 34, borderRadius: 17,
     justifyContent: "center", alignItems: "center",
   },
-  map: { height: height * 0.36 },
+  mapFrame: { marginHorizontal: 12, marginTop: 4, aspectRatio: 1.156 },
+  // Inner window of the drawing (below the header bar, inside the side lines)
+  mapWindow: {
+    position: "absolute", top: "11.5%", left: "2.1%", right: "2.6%", bottom: "1.5%",
+    overflow: "hidden", backgroundColor: "#F5F3EF",
+  },
+  mapFrameArt: { width: "100%", height: "100%" },
 
   askBar: {
     flexDirection: "row", alignItems: "center", gap: 8,
     marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
     backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
   },
-  askInput: { flex: 1, paddingVertical: 10, fontSize: 14, color: "#000" },
+  askInput: { fontFamily: F.w400, flex: 1, paddingVertical: 10, fontSize: 14, color: "#000" },
   askExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
   askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 10, paddingVertical: 6 },
-  askChipText: { fontSize: 12, color: "#3A3833" },
+  askChipText: { fontFamily: F.w400, fontSize: 12, color: "#3A3833" },
   aiBanner: {
     flexDirection: "row", alignItems: "center", gap: 10,
     marginHorizontal: 12, marginBottom: 8, padding: 10,
     backgroundColor: "#000", borderRadius: 10,
   },
-  aiBannerText: { flex: 1, color: "#FFF", fontSize: 13, fontWeight: "600" },
-  aiBannerClear: { color: "#A8A49C", fontSize: 12, fontWeight: "700" },
+  aiBannerText: { fontFamily: F.w600, flex: 1, color: "#FFF", fontSize: 13, },
+  aiBannerClear: { fontFamily: F.w700, color: "#A8A49C", fontSize: 12, },
   pin: {
     width: 38, height: 38, borderRadius: 19,
     justifyContent: "center", alignItems: "center",
@@ -459,7 +475,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
   pinSelected: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: "#D0341A" },
-  pinText: { fontSize: 16 },
+  pinText: { fontFamily: F.w400, fontSize: 16 },
 
   filterBar: {
     flexDirection: "row", alignItems: "center",
@@ -477,7 +493,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
   dropdownTriggerActive: { backgroundColor: "#000", borderColor: "#000" },
-  dropdownTriggerText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
+  dropdownTriggerText: { fontFamily: F.w600, fontSize: 13, color: "#3A3833" },
   dropdownTriggerTextActive: { color: "#FFF" },
   dropdownMenu: {
     position: "absolute", top: 38, left: 0,
@@ -492,9 +508,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
   dropdownItemActive: { backgroundColor: "#F5F3EF" },
-  dropdownItemText: { fontSize: 14, fontWeight: "500", color: "#3A3833" },
-  dropdownItemTextActive: { fontWeight: "700", color: "#000" },
-  filterCount: { marginLeft: "auto", fontSize: 12, color: "#A8A49C", fontWeight: "500" },
+  dropdownItemText: { fontFamily: F.w500, fontSize: 14, color: "#3A3833" },
+  dropdownItemTextActive: { fontFamily: F.w700, color: "#000" },
+  filterCount: { fontFamily: F.w500, marginLeft: "auto", fontSize: 12, color: "#A8A49C", },
 
   list: { padding: 12, gap: 10, paddingBottom: 30 },
   card: {
@@ -506,23 +522,23 @@ const styles = StyleSheet.create({
   cardSelected: { borderColor: "#000" },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   typeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
-  typeBadgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
-  cardPrice: { fontSize: 14, fontWeight: "700", color: "#000" },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8 },
+  typeBadgeText: { fontFamily: F.w700, fontSize: 11, letterSpacing: 0.5 },
+  cardPrice: { fontFamily: F.w700, fontSize: 14, color: "#000" },
+  cardTitle: { fontFamily: F.w700, fontSize: 16, color: "#000", marginBottom: 8 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
-  cardMeta: { fontSize: 13, color: "#7D7A73", flex: 1 },
+  cardMeta: { fontFamily: F.w400, fontSize: 13, color: "#7D7A73", flex: 1 },
   cardBottom: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
-  spotsText: { fontSize: 13, fontWeight: "700" },
-  spotsTotal: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  spotsText: { fontFamily: F.w700, fontSize: 13, },
+  spotsTotal: { fontFamily: F.w400, fontSize: 11, color: "#A8A49C", marginTop: 2 },
   joinBtn: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 9, borderRadius: 10 },
-  joinBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
+  joinBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 14 },
   emptyState: { alignItems: "center", paddingVertical: 60, paddingHorizontal: 20 },
-  emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#000", marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: "#A8A49C", marginBottom: 20 },
+  emptyEmoji: { fontFamily: F.w400, fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontFamily: F.w700, fontSize: 18, color: "#000", marginBottom: 6 },
+  emptySubtitle: { fontFamily: F.w400, fontSize: 14, color: "#A8A49C", marginBottom: 20 },
   emptyBtn: { backgroundColor: "#000", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  emptyBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
+  emptyBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 15 },
 });

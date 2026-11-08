@@ -8,6 +8,7 @@ import { sendEmailVerification, reload, signOut } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
 import { ensureMyProfile } from "../../services/users";
 import { Ionicons } from "@expo/vector-icons";
+import { F } from "../../constants/fonts";
 
 // Step 3 of signup: wait for the user to tap the emailed verification link,
 // then add them to GO!'s player list in Tiger and enter the app.
@@ -122,10 +123,11 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
     marginBottom: 28,
   },
-  title: { fontSize: 26, fontWeight: "800", color: "#000", marginBottom: 10, textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#7D7A73", textAlign: "center" },
-  email: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 16, textAlign: "center" },
+  title: { fontFamily: F.w800, fontSize: 26, color: "#000", marginBottom: 10, textAlign: "center" },
+  subtitle: { fontFamily: F.w400, fontSize: 15, color: "#7D7A73", textAlign: "center" },
+  email: { fontFamily: F.w700, fontSize: 15, color: "#000", marginBottom: 16, textAlign: "center" },
   instruction: {
+    fontFamily: F.w400,
     fontSize: 14, color: "#A8A49C", textAlign: "center",
     lineHeight: 20, marginBottom: 36,
   },
@@ -133,13 +135,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#000", width: "100%", paddingVertical: 18,
     borderRadius: 14, alignItems: "center", marginBottom: 14,
   },
-  primaryBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  primaryBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 16 },
   secondaryBtn: {
     width: "100%", paddingVertical: 16,
     borderRadius: 14, borderWidth: 1, borderColor: "#ECE9E3",
     alignItems: "center", marginBottom: 24,
   },
-  secondaryBtnText: { color: "#000", fontWeight: "600", fontSize: 15 },
+  secondaryBtnText: { fontFamily: F.w600, color: "#000", fontSize: 15 },
   cancelLink: { marginTop: 8 },
-  cancelText: { color: "#A8A49C", fontSize: 14, fontWeight: "500" },
+  cancelText: { fontFamily: F.w500, color: "#A8A49C", fontSize: 14, },
 });

@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { TabIcon, TAB_ICONS } from '../../components/brand-art';
+import { F } from '../../constants/fonts';
 
 export default function TabLayout() {
   return (
@@ -8,7 +9,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#A8A49C',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: F.w700 },
         tabBarStyle: {
           height: 88,
           paddingTop: 6,

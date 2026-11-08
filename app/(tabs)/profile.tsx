@@ -15,6 +15,7 @@ import { MediaItem, UserProfile, Post } from "../../types";
 import { getUserPosts } from "../../services/posts";
 import { Brand } from "../../constants/brand";
 import { CourtPin } from "../../components/brand-art";
+import { F } from "../../constants/fonts";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_W   = SCREEN_W - 32;
@@ -245,9 +246,9 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        {editing ? (
+      {editing && (
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Edit profile</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={cancelEdit}>
               <Text style={styles.cancelBtn}>Cancel</Text>
@@ -259,76 +260,111 @@ export default function ProfileScreen() {
               }
             </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity onPress={() => setEditing(true)} style={styles.editBtn}>
-            <Ionicons name="pencil-outline" size={16} color="#000" />
-            <Text style={styles.editBtnText}>Edit</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <View style={styles.card}>
-          <TouchableOpacity
-            onPress={editing ? pickAvatar : undefined}
-            style={styles.avatarWrapper}
-            activeOpacity={editing ? 0.7 : 1}
-          >
-            {(draftPhotoUri || profile.photoURL) ? (
-              <Image source={{ uri: draftPhotoUri ?? profile.photoURL }} style={styles.avatarImage} />
+        {editing ? (
+          <View style={styles.card}>
+            <TouchableOpacity
+              onPress={editing ? pickAvatar : undefined}
+              style={styles.avatarWrapper}
+              activeOpacity={editing ? 0.7 : 1}
+            >
+              {(draftPhotoUri || profile.photoURL) ? (
+                <Image source={{ uri: draftPhotoUri ?? profile.photoURL }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarFallback}>
+                  <Text style={styles.avatarInitials}>{initials}</Text>
+                </View>
+              )}
+              {editing && (
+                <View style={styles.avatarEditBadge}>
+                  <Ionicons name="camera" size={13} color="#FFF" />
+                </View>
+              )}
+            </TouchableOpacity>
+  
+            {editing ? (
+              <TextInput
+                style={styles.nameInput}
+                value={draftName}
+                onChangeText={setDraftName}
+                placeholder="Your name"
+                placeholderTextColor="#A8A49C"
+              />
             ) : (
-              <View style={styles.avatarFallback}>
-                <Text style={styles.avatarInitials}>{initials}</Text>
-              </View>
+              <Text style={styles.nameText}>{displayName}</Text>
             )}
-            {editing && (
-              <View style={styles.avatarEditBadge}>
-                <Ionicons name="camera" size={13} color="#FFF" />
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {editing ? (
-            <TextInput
-              style={styles.nameInput}
-              value={draftName}
-              onChangeText={setDraftName}
-              placeholder="Your name"
-              placeholderTextColor="#A8A49C"
-            />
-          ) : (
-            <Text style={styles.nameText}>{displayName}</Text>
-          )}
-          <Text style={styles.emailText}>{email}</Text>
-
-          <View style={styles.followStatsRow}>
-            <TouchableOpacity style={styles.followStat} onPress={() => router.push(`/profile/followers` as any)}>
-              <Text style={styles.followStatValue}>{followerCount}</Text>
-              <Text style={styles.followStatLabel}>Followers</Text>
-            </TouchableOpacity>
-            <View style={styles.followStatDivider} />
-            <TouchableOpacity style={styles.followStat} onPress={() => router.push(`/profile/following` as any)}>
-              <Text style={styles.followStatValue}>{followingCount}</Text>
-              <Text style={styles.followStatLabel}>Following</Text>
-            </TouchableOpacity>
+            <Text style={styles.emailText}>{email}</Text>
+  
+            {editing ? (
+              <TextInput
+                style={styles.descriptionInput}
+                value={draftDescription}
+                onChangeText={setDraftDesc}
+                placeholder="Add a bio..."
+                placeholderTextColor="#A8A49C"
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            ) : profile.description ? (
+              <Text style={styles.descriptionText}>{profile.description}</Text>
+            ) : null}
           </View>
+        ) : (
+          <>
+            {/* Greeting + avatar */}
+            <View style={styles.hero}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroHello}>Hi,</Text>
+                <Text style={styles.heroName} numberOfLines={1}>{displayName}</Text>
+                <Text style={styles.heroMeta}>
+                  {[profile.positions?.[0], profile.skillLevel].filter(Boolean).join(" · ")}
+                </Text>
+              </View>
+              <View style={{ alignItems: "center", gap: 8 }}>
+                {profile.photoURL ? (
+                  <Image source={{ uri: profile.photoURL }} style={styles.heroAvatar} />
+                ) : (
+                  <View style={[styles.heroAvatar, styles.heroAvatarFallback]}>
+                    <Text style={styles.avatarInitials}>{initials}</Text>
+                  </View>
+                )}
+                <TouchableOpacity onPress={() => setEditing(true)} style={styles.editPill}>
+                  <Text style={styles.editPillText}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {profile.description ? <Text style={styles.heroBio}>{profile.description}</Text> : null}
 
-          {editing ? (
-            <TextInput
-              style={styles.descriptionInput}
-              value={draftDescription}
-              onChangeText={setDraftDesc}
-              placeholder="Add a bio..."
-              placeholderTextColor="#A8A49C"
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          ) : profile.description ? (
-            <Text style={styles.descriptionText}>{profile.description}</Text>
-          ) : null}
-        </View>
+            {/* Player card (HEYTEA-style membership card) */}
+            <View style={styles.playerCard}>
+              <View style={styles.playerCardTop}>
+                <Text style={styles.playerCardLabel}>GO! PLAYER</Text>
+                <Image source={require("../../assets/images/logo-mark.png")} style={styles.playerCardLogo} />
+              </View>
+              <Text style={styles.playerCardTier}>{profile.skillLevel || "Player"}</Text>
+              <View style={styles.playerCardDot} />
+              <View style={styles.playerStats}>
+                <PlayerStat value={profile.sessionsAttended} label="Played" />
+                <PlayerStat value={profile.sessionsHosted} label="Hosted" />
+                <PlayerStat value={followerCount} label="Followers" />
+                <PlayerStat value={followingCount} label="Following" />
+              </View>
+            </View>
+
+            {/* Shortcuts */}
+            <View style={styles.shortcuts}>
+              <Shortcut icon={require("../../assets/images/brand/tab-map.png")} label="Find games" onPress={() => router.push("/(tabs)/map" as any)} />
+              <Shortcut icon={require("../../assets/images/brand/icon-house.png")} label="Host a game" onPress={() => router.push("/create-session" as any)} />
+              <Shortcut icon={require("../../assets/images/brand/tab-leaderboard.png")} label="Leaderboard" onPress={() => router.push("/(tabs)/leaderboard" as any)} />
+              <Shortcut icon={require("../../assets/images/brand/icon-stats.png")} label="My stats" onPress={() => router.push("/(tabs)/leaderboard" as any)} />
+            </View>
+          </>
+        )}
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Positions</Text>
@@ -501,27 +537,9 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Stats</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{profile.sessionsAttended}</Text>
-              <Text style={styles.statLabel}>Sessions{"\n"}Attended</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{profile.sessionsHosted}</Text>
-              <Text style={styles.statLabel}>Sessions{"\n"}Hosted</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>—</Text>
-              <Text style={styles.statLabel}>Community{"\n"}Rating</Text>
-            </View>
-          </View>
-        </View>
-
         {posts.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Recent Sessions</Text>
+            <Text style={styles.sectionTitle}>Recent games</Text>
             <View style={{ gap: 10 }}>
               {posts.map(post => {
                 const typeColor = TYPE_COLORS[post.sessionType ?? ""] ?? "#7D7A73";
@@ -573,6 +591,24 @@ export default function ProfileScreen() {
   );
 }
 
+function PlayerStat({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={{ alignItems: "center", flex: 1 }}>
+      <Text style={styles.playerStatValue}>{value ?? 0}</Text>
+      <Text style={styles.playerStatLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function Shortcut({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.shortcut} onPress={onPress} activeOpacity={0.7}>
+      <Image source={icon} style={styles.shortcutIcon} resizeMode="contain" />
+      <Text style={styles.shortcutLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
@@ -580,19 +616,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
-  headerTitle: { fontSize: 20, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 20, color: "#000" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
-  cancelBtn: { fontSize: 15, color: "#A8A49C", fontWeight: "600" },
+  cancelBtn: { fontFamily: F.w600, fontSize: 15, color: "#A8A49C", },
   saveBtn: { backgroundColor: "#000", paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20 },
-  saveBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
+  saveBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 14 },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3" },
-  editBtnText: { fontSize: 14, fontWeight: "600", color: "#000" },
-  scroll: { padding: 12, gap: 12, paddingBottom: 40 },
+  editBtnText: { fontFamily: F.w600, fontSize: 14, color: "#000" },
+  scroll: { padding: 16, gap: 14, paddingBottom: 48 },
+
+  hero: { flexDirection: "row", alignItems: "flex-start", paddingTop: 12 },
+  heroHello: { fontFamily: F.w600, fontSize: 16, color: "#7D7A73", },
+  heroName: { fontFamily: F.w900, fontSize: 30, color: "#111111", marginTop: 2 },
+  heroMeta: { fontFamily: F.w600, fontSize: 14, color: "#7D7A73", marginTop: 4, },
+  heroBio: { fontFamily: F.w400, fontSize: 14, color: "#3A3833", lineHeight: 20, marginTop: -4 },
+  heroAvatar: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: "#111111" },
+  heroAvatarFallback: { backgroundColor: "#111111", justifyContent: "center", alignItems: "center" },
+  editPill: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 14, borderWidth: 1, borderColor: "#111111" },
+  editPillText: { fontFamily: F.w700, fontSize: 12, color: "#111111" },
+
+  playerCard: { backgroundColor: "#111111", borderRadius: 20, padding: 18, overflow: "hidden" },
+  playerCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  playerCardLabel: { fontFamily: F.w800, color: "#FFF", fontSize: 12, letterSpacing: 2.5, opacity: 0.8 },
+  playerCardLogo: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#FFF" },
+  playerCardTier: { fontFamily: F.w900, color: "#FFF", fontSize: 26, marginTop: 14 },
+  playerCardDot: { width: 28, height: 4, borderRadius: 2, backgroundColor: "#D0341A", marginTop: 8, marginBottom: 18 },
+  playerStats: { flexDirection: "row", borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.15)", paddingTop: 14 },
+  playerStatValue: { fontFamily: F.w800, color: "#FFF", fontSize: 20, },
+  playerStatLabel: { fontFamily: F.w600, color: "rgba(255,255,255,0.6)", fontSize: 11, marginTop: 2 },
+
+  shortcuts: { flexDirection: "row", backgroundColor: "#FFF", borderRadius: 18, paddingVertical: 14 },
+  shortcut: { flex: 1, alignItems: "center", gap: 6 },
+  shortcutIcon: { width: 40, height: 40 },
+  shortcutLabel: { fontFamily: F.w600, fontSize: 12, color: "#3A3833" },
 
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 12 },
-  sectionHint: { fontSize: 12, color: "#A8A49C", marginBottom: 10, marginTop: -6 },
-  emptyNote: { fontSize: 13, color: "#A8A49C", fontStyle: "italic" },
+  sectionTitle: { fontFamily: F.w700, fontSize: 15, color: "#000", marginBottom: 12 },
+  sectionHint: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", marginBottom: 10, marginTop: -6 },
+  emptyNote: { fontFamily: F.w400, fontSize: 13, color: "#A8A49C", fontStyle: "italic" },
 
   avatarWrapper: { alignSelf: "center", position: "relative", marginBottom: 12 },
   avatarImage: { width: 88, height: 88, borderRadius: 44 },
@@ -600,22 +661,24 @@ const styles = StyleSheet.create({
     width: 88, height: 88, borderRadius: 44,
     backgroundColor: "#000", justifyContent: "center", alignItems: "center",
   },
-  avatarInitials: { color: "#FFF", fontSize: 30, fontWeight: "800" },
+  avatarInitials: { fontFamily: F.w800, color: "#FFF", fontSize: 30, },
   avatarEditBadge: {
     position: "absolute", bottom: 0, right: 0,
     backgroundColor: "#000", width: 26, height: 26, borderRadius: 13,
     justifyContent: "center", alignItems: "center",
     borderWidth: 2, borderColor: "#FFF",
   },
-  nameText: { fontSize: 20, fontWeight: "700", color: "#000", textAlign: "center", marginBottom: 4 },
-  emailText: { fontSize: 13, color: "#A8A49C", textAlign: "center", marginBottom: 8 },
+  nameText: { fontFamily: F.w700, fontSize: 20, color: "#000", textAlign: "center", marginBottom: 4 },
+  emailText: { fontFamily: F.w400, fontSize: 13, color: "#A8A49C", textAlign: "center", marginBottom: 8 },
   nameInput: {
-    fontSize: 18, fontWeight: "700", color: "#000",
+    fontFamily: F.w700,
+    fontSize: 18, color: "#000",
     borderBottomWidth: 2, borderBottomColor: "#000",
     paddingVertical: 4, textAlign: "center", marginBottom: 6,
   },
-  descriptionText: { fontSize: 14, color: "#7D7A73", textAlign: "center", lineHeight: 20, marginTop: 4 },
+  descriptionText: { fontFamily: F.w400, fontSize: 14, color: "#7D7A73", textAlign: "center", lineHeight: 20, marginTop: 4 },
   descriptionInput: {
+    fontFamily: F.w400,
     marginTop: 8, backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, padding: 12, fontSize: 14, color: "#000", minHeight: 72,
   },
@@ -626,16 +689,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#000", borderRadius: 14,
     paddingHorizontal: 18, paddingVertical: 12, alignSelf: "flex-start",
   },
-  pos1Rank: { fontSize: 11, fontWeight: "800", color: "#A8A49C" },
-  pos1Label: { fontSize: 17, fontWeight: "800", color: "#FFF" },
+  pos1Rank: { fontFamily: F.w800, fontSize: 11, color: "#A8A49C" },
+  pos1Label: { fontFamily: F.w800, fontSize: 17, color: "#FFF" },
   pos23Row: { flexDirection: "row", gap: 8 },
   pos23Chip: {
     flexDirection: "row", alignItems: "center", gap: 6,
     borderWidth: 1.5, borderColor: "#ECE9E3", borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 8,
   },
-  pos23Rank: { fontSize: 10, fontWeight: "700", color: "#A8A49C" },
-  pos23Label: { fontSize: 14, fontWeight: "600", color: "#3A3833" },
+  pos23Rank: { fontFamily: F.w700, fontSize: 10, color: "#A8A49C" },
+  pos23Label: { fontFamily: F.w600, fontSize: 14, color: "#3A3833" },
 
   // Chips (edit mode)
   chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -645,11 +708,11 @@ const styles = StyleSheet.create({
     borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3", backgroundColor: "#FAF9F6",
   },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
-  chipRank: { fontSize: 10, fontWeight: "800", color: "#A8A49C" },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
+  chipRank: { fontFamily: F.w800, fontSize: 10, color: "#A8A49C" },
+  chipText: { fontFamily: F.w600, fontSize: 13, color: "#3A3833" },
   chipTextActive: { color: "#FFF" },
 
-  skillLevelTag: { fontSize: 13, fontWeight: "600", color: "#7D7A73", marginBottom: 12 },
+  skillLevelTag: { fontFamily: F.w600, fontSize: 13, color: "#7D7A73", marginBottom: 12 },
   mediaRemoveBadge: {
     position: "absolute", top: 4, right: 4,
     backgroundColor: "rgba(0,0,0,0.6)", width: 20, height: 20, borderRadius: 10,
@@ -669,15 +732,15 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 3,
     backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
   },
-  videoBadgeText: { color: "#FFF", fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  videoBadgeText: { fontFamily: F.w700, color: "#FFF", fontSize: 9, letterSpacing: 0.5 },
 
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
     flex: 1, backgroundColor: "#FAF9F6", borderRadius: 12,
     padding: 14, alignItems: "center",
   },
-  statValue: { fontSize: 24, fontWeight: "800", color: "#000", marginBottom: 4 },
-  statLabel: { fontSize: 11, color: "#A8A49C", textAlign: "center", lineHeight: 15 },
+  statValue: { fontFamily: F.w800, fontSize: 24, color: "#000", marginBottom: 4 },
+  statLabel: { fontFamily: F.w400, fontSize: 11, color: "#A8A49C", textAlign: "center", lineHeight: 15 },
 
   postCard: {
     backgroundColor: "#FAF9F6", borderRadius: 12, padding: 12,
@@ -685,27 +748,27 @@ const styles = StyleSheet.create({
   },
   postTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   postTypeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
-  postTypeBadgeText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
-  postPrice: { fontSize: 12, fontWeight: "700", color: "#000" },
-  postFree: { fontSize: 12, fontWeight: "700", color: "#111111" },
-  postTitle: { fontSize: 14, fontWeight: "700", color: "#000", marginBottom: 5 },
+  postTypeBadgeText: { fontFamily: F.w700, fontSize: 10, letterSpacing: 0.5 },
+  postPrice: { fontFamily: F.w700, fontSize: 12, color: "#000" },
+  postFree: { fontFamily: F.w700, fontSize: 12, color: "#111111" },
+  postTitle: { fontFamily: F.w700, fontSize: 14, color: "#000", marginBottom: 5 },
   postRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  postMeta: { fontSize: 12, color: "#A8A49C", flex: 1 },
+  postMeta: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", flex: 1 },
 
   signOutBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14, borderRadius: 12,
     backgroundColor: "#FFF", borderWidth: 1, borderColor: "#F6DDD7",
   },
-  signOutText: { color: "#D0341A", fontWeight: "700", fontSize: 15 },
+  signOutText: { fontFamily: F.w700, color: "#D0341A", fontSize: 15 },
 
   followStatsRow: {
     flexDirection: "row", alignItems: "center",
     marginTop: 12, marginBottom: 4,
   },
   followStat: { flex: 1, alignItems: "center" },
-  followStatValue: { fontSize: 20, fontWeight: "800", color: "#000" },
-  followStatLabel: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  followStatValue: { fontFamily: F.w800, fontSize: 20, color: "#000" },
+  followStatLabel: { fontFamily: F.w400, fontSize: 11, color: "#A8A49C", marginTop: 2 },
   followStatDivider: { width: 1, height: 32, backgroundColor: "#ECE9E3", marginHorizontal: 8 },
   requestRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
@@ -714,14 +777,14 @@ const styles = StyleSheet.create({
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: "#000", justifyContent: "center", alignItems: "center",
   },
-  requestAvatarText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
-  requestName: { flex: 1, fontSize: 14, fontWeight: "600", color: "#000" },
+  requestAvatarText: { fontFamily: F.w700, color: "#FFF", fontSize: 14 },
+  requestName: { fontFamily: F.w600, flex: 1, fontSize: 14, color: "#000" },
   acceptBtn: {
     backgroundColor: "#000", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
   },
-  acceptBtnText: { color: "#FFF", fontWeight: "700", fontSize: 13 },
+  acceptBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 13 },
   declineBtn: {
     borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
   },
-  declineBtnText: { color: "#7D7A73", fontWeight: "600", fontSize: 13 },
+  declineBtnText: { fontFamily: F.w600, color: "#7D7A73", fontSize: 13 },
 });

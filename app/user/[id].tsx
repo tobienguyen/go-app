@@ -12,6 +12,7 @@ import {
   getFollowerCount, getFollowingCount,
 } from "../../services/follows";
 import { UserProfile, MediaItem } from "../../types";
+import { F } from "../../constants/fonts";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_W   = SCREEN_W - 32;
@@ -226,11 +227,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#000" },
+  headerTitle: { fontFamily: F.w700, fontSize: 17, color: "#000" },
   backBtn: { padding: 4 },
   scroll: { padding: 12, gap: 12, paddingBottom: 40 },
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 12 },
+  sectionTitle: { fontFamily: F.w700, fontSize: 15, color: "#000", marginBottom: 12 },
 
   topRow: { flexDirection: "row", gap: 16, marginBottom: 16 },
   avatarImage: { width: 76, height: 76, borderRadius: 38 },
@@ -238,11 +239,11 @@ const styles = StyleSheet.create({
     width: 76, height: 76, borderRadius: 38,
     backgroundColor: "#000", justifyContent: "center", alignItems: "center",
   },
-  avatarInitials: { color: "#FFF", fontSize: 26, fontWeight: "800" },
+  avatarInitials: { fontFamily: F.w800, color: "#FFF", fontSize: 26, },
   topInfo: { flex: 1, justifyContent: "center", gap: 3 },
-  nameText: { fontSize: 18, fontWeight: "700", color: "#000" },
-  skillText: { fontSize: 13, color: "#7D7A73", fontWeight: "600" },
-  posText: { fontSize: 12, color: "#A8A49C" },
+  nameText: { fontFamily: F.w700, fontSize: 18, color: "#000" },
+  skillText: { fontFamily: F.w600, fontSize: 13, color: "#7D7A73", },
+  posText: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C" },
 
   statsRow: {
     flexDirection: "row", alignItems: "center",
@@ -250,8 +251,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   stat: { flex: 1, alignItems: "center" },
-  statValue: { fontSize: 20, fontWeight: "800", color: "#000" },
-  statLabel: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  statValue: { fontFamily: F.w800, fontSize: 20, color: "#000" },
+  statLabel: { fontFamily: F.w400, fontSize: 11, color: "#A8A49C", marginTop: 2 },
   statDivider: { width: 1, height: 32, backgroundColor: "#ECE9E3" },
 
   followBtn: {
@@ -262,10 +263,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F3EF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
     paddingVertical: 14, alignItems: "center", marginBottom: 12,
   },
-  followBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
-  followBtnTextActive: { color: "#3A3833", fontWeight: "700", fontSize: 15 },
+  followBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 15 },
+  followBtnTextActive: { fontFamily: F.w700, color: "#3A3833", fontSize: 15 },
 
-  descText: { fontSize: 14, color: "#7D7A73", lineHeight: 20 },
+  descText: { fontFamily: F.w400, fontSize: 14, color: "#7D7A73", lineHeight: 20 },
 
   videoTile: {
     borderRadius: 10, backgroundColor: "#1F1E1B",

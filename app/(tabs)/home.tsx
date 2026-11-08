@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-na
 import { auth } from "../../config/firebaseConfig"; // Note: ../../ because it's inside (tabs)
 import { signOut } from "firebase/auth";
 import { useRouter } from "expo-router";
+import { F } from "../../constants/fonts";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -39,11 +40,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  title: { fontSize: 32, fontWeight: '800', color: '#000' },
-  subtitle: { fontSize: 16, color: '#666', marginTop: 10, marginBottom: 40 },
+  title: { fontFamily: F.w800, fontSize: 32, color: '#000' },
+  subtitle: { fontFamily: F.w400, fontSize: 16, color: '#666', marginTop: 10, marginBottom: 40 },
   card: { backgroundColor: '#F5F3EF', padding: 20, borderRadius: 15, width: '100%', alignItems: 'center', marginBottom: 20 },
-  label: { fontSize: 12, color: '#A8A49C', textTransform: 'uppercase', letterSpacing: 1 },
-  emailText: { fontSize: 18, fontWeight: '600', color: '#000', marginTop: 5 },
+  label: { fontFamily: F.w400, fontSize: 12, color: '#A8A49C', textTransform: 'uppercase', letterSpacing: 1 },
+  emailText: { fontFamily: F.w600, fontSize: 18, color: '#000', marginTop: 5 },
   signOutButton: { marginTop: 20, padding: 10 },
-  signOutText: { color: '#D0341A', fontWeight: '600', fontSize: 16 }
+  signOutText: { fontFamily: F.w600, color: '#D0341A', fontSize: 16 }
 });
