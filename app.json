@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "go-app",
+    "name": "GO!",
     "slug": "go-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,15 +13,15 @@
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.goapp.volleyball",
       "infoPlist": {
-        "NSCameraUsageDescription": "Go! uses your camera to track your jump and touch height.",
-        "NSMicrophoneUsageDescription": "Go! records audio when you capture a session clip.",
-        "NSPhotoLibraryAddUsageDescription": "Go! saves your recorded clips to your photo library.",
+        "NSCameraUsageDescription": "GO! uses your camera to track your jump and touch height.",
+        "NSMicrophoneUsageDescription": "GO! records audio when you capture a session clip.",
+        "NSPhotoLibraryAddUsageDescription": "GO! saves your recorded clips to your photo library.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -57,7 +57,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Go! to use your location to show nearby sessions."
+          "locationAlwaysAndWhenInUsePermission": "Allow GO! to use your location to show nearby sessions."
         }
       ],
       [
@@ -77,19 +77,20 @@
       [
         "react-native-vision-camera",
         {
-          "cameraPermissionText": "Go! uses your camera to track your jump and touch height.",
+          "cameraPermissionText": "GO! uses your camera to track your jump and touch height.",
           "enableMicrophonePermission": true,
-          "microphonePermissionText": "Go! records audio when you capture a session clip."
+          "microphonePermissionText": "GO! records audio when you capture a session clip."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Go! to save clips to your photo library.",
-          "savePhotosPermission": "Allow Go! to save clips to your photo library.",
+          "photosPermission": "Allow GO! to save clips to your photo library.",
+          "savePhotosPermission": "Allow GO! to save clips to your photo library.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

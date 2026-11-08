@@ -1,50 +1,51 @@
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../config/firebaseConfig";
-import { UserProfile, MediaItem } from "../types";
+import { auth, storage } from "../config/firebaseConfig";
+import { callApi } from "./api";
+import { UserProfile } from "../types";
 
-export async function getUser(uid: string): Promise<UserProfile | null> {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) return null;
-  const d = snap.data();
-  return {
-    uid,
-    name: d.name ?? "",
-    email: d.email ?? "",
-    photoURL: d.photoURL ?? "",
-    positions: d.positions ?? [],
-    skillLevel: d.skillLevel ?? d.experience ?? "Beginner",
-    description: d.description ?? "",
-    mediaItems: d.mediaItems ?? [],
-    sessionsHosted: d.sessionsHosted ?? 0,
-    sessionsAttended: d.sessionsAttended ?? 0,
-    createdAt: d.createdAt,
-  };
+// Profile data lives in Tiger Cloud (via the API). Photos and videos stay in
+// Firebase Storage; only their URLs are saved in the database.
+
+export function getUser(uid: string) {
+  return callApi<UserProfile | null>("getUser", { uid });
 }
 
+/** Creates the signed-in user's profile (the server uses the auth uid). */
 export async function createUser(
-  uid: string,
-  data: { name: string; email: string; photoURL?: string },
+  _uid: string,
+  data: { name: string; email: string; photoURL?: string; skillLevel?: string },
 ): Promise<void> {
-  await setDoc(doc(db, "users", uid), {
-    name: data.name,
-    email: data.email,
-    photoURL: data.photoURL ?? "",
-    positions: [],
-    skillLevel: "Beginner",
-    description: "",
-    mediaItems: [],
-    sessionsHosted: 0,
-    sessionsAttended: 0,
-    createdAt: serverTimestamp(),
+  await callApi("createUser", data);
+}
+
+// Skill level picked on the signup form, held until the email is verified.
+let pendingSkillLevel: string | undefined;
+export function setPendingSkillLevel(level: string) { pendingSkillLevel = level; }
+
+let ensuredUid: string | null = null;
+/**
+ * Adds the signed-in, verified user to GO!'s player list in Tiger (no-op if
+ * they're already there). Called after verification and on every app start.
+ */
+export async function ensureMyProfile(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || ensuredUid === user.uid) return;
+  const isSocial = user.providerData.some(p => p.providerId !== "password");
+  if (!user.emailVerified && !isSocial) return;
+  await createUser(user.uid, {
+    name: user.displayName || user.email?.split("@")[0] || "Player",
+    email: user.email ?? "",
+    photoURL: user.photoURL ?? "",
+    skillLevel: pendingSkillLevel,
   });
+  ensuredUid = user.uid;
 }
 
 export async function updateUser(
-  uid: string,
+  _uid: string,
   updates: Partial<Omit<UserProfile, "uid" | "createdAt">>,
 ): Promise<void> {
-  await setDoc(doc(db, "users", uid), updates, { merge: true });
+  await callApi("updateUser", updates);
 }
 
 export async function uploadAvatar(uid: string, localUri: string): Promise<string> {
@@ -59,9 +60,12 @@ export async function uploadMediaItem(
   localUri: string,
   index: number,
 ): Promise<string> {
+  const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(localUri) || localUri.includes("video");
+  const ext = isVideo ? "mp4" : "jpg";
+  const contentType = isVideo ? "video/mp4" : "image/jpeg";
   const blob = await uriToBlob(localUri);
-  const storageRef = ref(storage, `users/${uid}/media/${Date.now()}_${index}.jpg`);
-  await uploadBytes(storageRef, blob, { contentType: "image/jpeg" });
+  const storageRef = ref(storage, `users/${uid}/media/${Date.now()}_${index}.${ext}`);
+  await uploadBytes(storageRef, blob, { contentType });
   return getDownloadURL(storageRef);
 }
 

@@ -6,7 +6,9 @@ import {
 import { useRouter } from "expo-router";
 import { sendEmailVerification, reload, signOut } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
+import { ensureMyProfile } from "../../services/users";
 import { Ionicons } from "@expo/vector-icons";
+import { F } from "../../constants/fonts";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -21,12 +23,8 @@ export default function VerifyEmailScreen() {
       // Reload forces Firebase to re-fetch the latest emailVerified status
       await reload(user);
       if (user.emailVerified) {
-        // If profile setup was never completed, go there first
-        if (!user.displayName) {
-          router.replace("/auth/signup-details" as any);
-        } else {
-          router.replace("/(tabs)" as any);
-        }
+        await ensureMyProfile();
+        router.replace("/(tabs)" as any);
       } else {
         Alert.alert(
           "Not Verified Yet",
@@ -54,6 +52,11 @@ export default function VerifyEmailScreen() {
   };
 
   const handleSignOut = async () => {
+    // An email signup that was never verified is removed, so this email can
+    // sign up again later.
+    const unfinished = user && !user.emailVerified &&
+      user.providerData.every(p => p.providerId === "password");
+    if (unfinished) { try { await user.delete(); } catch {} }
     await signOut(auth);
     router.replace("/auth" as any);
   };
@@ -112,28 +115,29 @@ const styles = StyleSheet.create({
   },
   iconCircle: {
     width: 96, height: 96, borderRadius: 48,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F3EF",
     justifyContent: "center", alignItems: "center",
     marginBottom: 28,
   },
-  title: { fontSize: 26, fontWeight: "800", color: "#000", marginBottom: 10, textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#6B7280", textAlign: "center" },
-  email: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 16, textAlign: "center" },
+  title: { fontFamily: F.w800, fontSize: 29, color: "#000", marginBottom: 10, textAlign: "center" },
+  subtitle: { fontFamily: F.w400, fontSize: 17, color: "#7D7A73", textAlign: "center" },
+  email: { fontFamily: F.w700, fontSize: 17, color: "#000", marginBottom: 16, textAlign: "center" },
   instruction: {
-    fontSize: 14, color: "#9CA3AF", textAlign: "center",
-    lineHeight: 20, marginBottom: 36,
+    fontFamily: F.w400,
+    fontSize: 16, color: "#A8A49C", textAlign: "center",
+    lineHeight: 22, marginBottom: 36,
   },
   primaryBtn: {
     backgroundColor: "#000", width: "100%", paddingVertical: 18,
     borderRadius: 14, alignItems: "center", marginBottom: 14,
   },
-  primaryBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  primaryBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 18 },
   secondaryBtn: {
     width: "100%", paddingVertical: 16,
-    borderRadius: 14, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 14, borderWidth: 1, borderColor: "#ECE9E3",
     alignItems: "center", marginBottom: 24,
   },
-  secondaryBtnText: { color: "#000", fontWeight: "600", fontSize: 15 },
+  secondaryBtnText: { fontFamily: F.w600, color: "#000", fontSize: 17 },
   signOutLink: { marginTop: 8 },
-  signOutText: { color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
+  signOutText: { fontFamily: F.w500, color: "#A8A49C", fontSize: 16, },
 });

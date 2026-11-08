@@ -1,87 +1,57 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  Alert, ActivityIndicator, TextInput,
+  Alert, ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, reload, signOut } from "firebase/auth";
-import { httpsCallable } from "firebase/functions";
-import { auth, functions } from "../../config/firebaseConfig";
+import { sendEmailVerification, reload, signOut } from "firebase/auth";
+import { auth } from "../../config/firebaseConfig";
+import { ensureMyProfile } from "../../services/users";
 import { Ionicons } from "@expo/vector-icons";
+import { F } from "../../constants/fonts";
 
-function tempPassword(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let p = "";
-  for (let i = 0; i < 28; i++) p += chars[Math.floor(Math.random() * chars.length)];
-  return p + "!Zz9";
-}
-
-const sendCodeFn   = () => httpsCallable(functions, "sendCode");
-const verifyCodeFn = () => httpsCallable(functions, "verifyCode");
+// Step 3 of signup: wait for the user to tap the emailed verification link,
+// then add them to GO!'s player list in Tiger and enter the app.
 
 export default function VerifyFirstScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const router = useRouter();
 
-  const [sending, setSending]   = useState(false);
-  const [sent, setSent]         = useState(false);
-  const [code, setCode]         = useState(["", "", "", "", "", ""]);
-  const [verifying, setVerifying] = useState(false);
+  const [checking, setChecking]   = useState(false);
   const [resending, setResending] = useState(false);
 
-  const inputs = useRef<(TextInput | null)[]>([]);
-
-  // ── Step 1: create temp account + send code ──────────────────────────────
-  const handleSendCode = async () => {
-    setSending(true);
-    try {
-      await createUserWithEmailAndPassword(auth, email, tempPassword());
-      await sendCodeFn()({ email });
-      setSent(true);
-    } catch (error: any) {
-      if (error.code === "auth/email-already-in-use") {
-        router.replace({ pathname: "/auth/login", params: { email } } as any);
-      } else {
-        Alert.alert("Error", "Could not send verification code. Check your connection.");
-      }
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // ── Step 2: verify the 6-digit code ─────────────────────────────────────
-  const handleVerify = async () => {
-    const fullCode = code.join("");
-    if (fullCode.length < 6) {
-      Alert.alert("Enter Code", "Please enter the full 6-digit code.");
+  const handleCheckVerified = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      router.replace("/auth" as any);
       return;
     }
-
-    setVerifying(true);
+    setChecking(true);
     try {
-      await verifyCodeFn()({ email, code: fullCode });
-      // Reload so auth.currentUser.emailVerified is now true
-      await reload(auth.currentUser!);
-      router.replace("/auth/signup-details" as any);
-    } catch (error: any) {
-      const msg = error?.message ?? "";
-      if (msg.includes("Incorrect code")) {
-        Alert.alert("Wrong Code", "That code is incorrect. Please try again.");
+      await reload(user);
+      if (auth.currentUser?.emailVerified) {
+        await ensureMyProfile();
+        router.replace("/(tabs)" as any);
       } else {
-        Alert.alert("Error", "Could not verify. Try again.");
+        Alert.alert(
+          "Not verified yet",
+          "Tap the link in the email first. If you can't find it, check your spam or junk folder.",
+        );
       }
+    } catch {
+      Alert.alert("Error", "Could not check verification. Try again.");
     } finally {
-      setVerifying(false);
+      setChecking(false);
     }
   };
 
   const handleResend = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
     setResending(true);
     try {
-      await sendCodeFn()({ email });
-      setCode(["", "", "", "", "", ""]);
-      inputs.current[0]?.focus();
-      Alert.alert("Sent", `A new code was sent to ${email}`);
+      await sendEmailVerification(user);
+      Alert.alert("Sent", `A new link was sent to ${email ?? user.email}`);
     } catch {
       Alert.alert("Error", "Could not resend. Wait a moment and try again.");
     } finally {
@@ -89,62 +59,14 @@ export default function VerifyFirstScreen() {
     }
   };
 
+  // Backing out of an unverified signup removes the account so the email can
+  // be used again.
   const handleCancel = async () => {
     try { await auth.currentUser?.delete(); } catch {}
     await signOut(auth);
     router.replace("/auth" as any);
   };
 
-  // ── Code input helpers ───────────────────────────────────────────────────
-  const onDigitChange = (text: string, index: number) => {
-    const digit = text.replace(/[^0-9]/g, "").slice(-1);
-    const next = [...code];
-    next[index] = digit;
-    setCode(next);
-    if (digit && index < 5) inputs.current[index + 1]?.focus();
-  };
-
-  const onKeyPress = (key: string, index: number) => {
-    if (key === "Backspace" && !code[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  };
-
-  // ── Step 1 UI ─────────────────────────────────────────────────────────────
-  if (!sent) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="shield-checkmark-outline" size={48} color="#000" />
-          </View>
-          <Text style={styles.title}>Verify your email first</Text>
-          <Text style={styles.subtitle}>{"We'll send a 6-digit code to"}</Text>
-          <Text style={styles.email}>{email}</Text>
-          <Text style={styles.instruction}>
-            Enter the code in this app to confirm it{"'"}s really you.
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.primaryBtn, sending && { opacity: 0.6 }]}
-            onPress={handleSendCode}
-            disabled={sending}
-          >
-            {sending
-              ? <ActivityIndicator color="#FFF" />
-              : <Text style={styles.primaryBtnText}>Send Code</Text>
-            }
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.cancelLink} onPress={() => router.back()}>
-            <Text style={styles.cancelText}>Use a different email</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ── Step 2 UI ─────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -152,34 +74,21 @@ export default function VerifyFirstScreen() {
           <Ionicons name="mail-open-outline" size={48} color="#000" />
         </View>
         <Text style={styles.title}>Check your inbox</Text>
-        <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
-        <Text style={styles.email}>{email}</Text>
-
-        {/* 6-digit code boxes */}
-        <View style={styles.codeRow}>
-          {code.map((digit, i) => (
-            <TextInput
-              key={i}
-              ref={(el) => { inputs.current[i] = el; }}
-              style={[styles.codeBox, digit ? styles.codeBoxFilled : null]}
-              value={digit}
-              onChangeText={(t) => onDigitChange(t, i)}
-              onKeyPress={({ nativeEvent }) => onKeyPress(nativeEvent.key, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-            />
-          ))}
-        </View>
+        <Text style={styles.subtitle}>We sent a verification link to</Text>
+        <Text style={styles.email}>{email ?? auth.currentUser?.email}</Text>
+        <Text style={styles.instruction}>
+          Tap the link, then come back here.{"\n"}
+          Don{"'"}t see it? Check your spam or junk folder.
+        </Text>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, verifying && { opacity: 0.6 }]}
-          onPress={handleVerify}
-          disabled={verifying}
+          style={[styles.primaryBtn, checking && { opacity: 0.6 }]}
+          onPress={handleCheckVerified}
+          disabled={checking}
         >
-          {verifying
+          {checking
             ? <ActivityIndicator color="#FFF" />
-            : <Text style={styles.primaryBtnText}>Verify</Text>
+            : <Text style={styles.primaryBtnText}>I{"'"}ve verified</Text>
           }
         </TouchableOpacity>
 
@@ -190,7 +99,7 @@ export default function VerifyFirstScreen() {
         >
           {resending
             ? <ActivityIndicator color="#000" size="small" />
-            : <Text style={styles.secondaryBtnText}>Resend code</Text>
+            : <Text style={styles.secondaryBtnText}>Resend link</Text>
           }
         </TouchableOpacity>
 
@@ -210,38 +119,29 @@ const styles = StyleSheet.create({
   },
   iconCircle: {
     width: 96, height: 96, borderRadius: 48,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F3EF",
     justifyContent: "center", alignItems: "center",
     marginBottom: 28,
   },
-  title: { fontSize: 26, fontWeight: "800", color: "#000", marginBottom: 10, textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#6B7280", textAlign: "center" },
-  email: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 16, textAlign: "center" },
+  title: { fontFamily: F.w800, fontSize: 29, color: "#000", marginBottom: 10, textAlign: "center" },
+  subtitle: { fontFamily: F.w400, fontSize: 17, color: "#7D7A73", textAlign: "center" },
+  email: { fontFamily: F.w700, fontSize: 17, color: "#000", marginBottom: 16, textAlign: "center" },
   instruction: {
-    fontSize: 14, color: "#9CA3AF", textAlign: "center",
-    lineHeight: 20, marginBottom: 36,
+    fontFamily: F.w400,
+    fontSize: 16, color: "#A8A49C", textAlign: "center",
+    lineHeight: 22, marginBottom: 36,
   },
-  codeRow: {
-    flexDirection: "row", gap: 10, marginBottom: 36, marginTop: 8,
-  },
-  codeBox: {
-    width: 46, height: 56, borderRadius: 12,
-    borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    textAlign: "center", fontSize: 22, fontWeight: "700", color: "#000",
-  },
-  codeBoxFilled: { borderColor: "#000", backgroundColor: "#FFF" },
   primaryBtn: {
     backgroundColor: "#000", width: "100%", paddingVertical: 18,
     borderRadius: 14, alignItems: "center", marginBottom: 14,
   },
-  primaryBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  primaryBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 18 },
   secondaryBtn: {
     width: "100%", paddingVertical: 16,
-    borderRadius: 14, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 14, borderWidth: 1, borderColor: "#ECE9E3",
     alignItems: "center", marginBottom: 24,
   },
-  secondaryBtnText: { color: "#000", fontWeight: "600", fontSize: 15 },
+  secondaryBtnText: { fontFamily: F.w600, color: "#000", fontSize: 17 },
   cancelLink: { marginTop: 8 },
-  cancelText: { color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
+  cancelText: { fontFamily: F.w500, color: "#A8A49C", fontSize: 16, },
 });

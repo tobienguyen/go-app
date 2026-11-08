@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeAuth, getAuth, getReactNativePersistence, Auth } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
@@ -15,8 +15,16 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Keep users signed in between app launches. initializeAuth can only run
+// once per app instance, so fall back to getAuth on fast refresh.
+let auth: Auth;
+try {
+  auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
+} catch {
+  auth = getAuth(app);
+}
 const storage = getStorage(app);
 const functions = getFunctions(app);
-export { auth, db, storage, functions };
+// App data lives in Tiger Cloud (see functions/ and db/); Firebase handles
+// sign-in (auth), photo/video files (storage), and hosts the API (functions).
+export { auth, storage, functions };

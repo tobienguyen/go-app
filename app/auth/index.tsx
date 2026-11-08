@@ -13,31 +13,28 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { auth } from "../../config/firebaseConfig";
+import { auth, functions } from "../../config/firebaseConfig";
+import { httpsCallable } from "firebase/functions";
 import { handleGoogleSignIn, handleAppleSignIn } from "../../utils/socialAuth";
+import { F } from "../../constants/fonts";
 
 WebBrowser.maybeCompleteAuthSession();
 
-// ─── Replace these with your own from Firebase Console ──────────────────────
-// Firebase Console → Project Settings → Your Apps → Web app → OAuth 2.0 Client IDs
-// Google Cloud Console → APIs & Services → Credentials
 const GOOGLE_IOS_CLIENT_ID = undefined; // Add iOS client ID when you register an iOS app in Firebase
 const GOOGLE_ANDROID_CLIENT_ID = undefined; // Add Android client ID after adding SHA-1 in Firebase
 const GOOGLE_WEB_CLIENT_ID = "760211922089-c3nmfede113rlfssmm6rj9jeagvgj0o8.apps.googleusercontent.com";
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function GatekeeperScreen() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const router = useRouter();
 
-  // ── Google OAuth ────────────────────────────────────────────────────────
+  // Google OAuth
   const [, googleResponse, googlePrompt] = Google.useAuthRequest({
     iosClientId: GOOGLE_WEB_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
@@ -55,7 +52,7 @@ export default function GatekeeperScreen() {
     }
   }, [googleResponse, router]);
 
-  // ── Apple Sign-In ───────────────────────────────────────────────────────
+  // Apple Sign-In
   const onApplePress = async () => {
     setAppleLoading(true);
     try {
@@ -70,38 +67,28 @@ export default function GatekeeperScreen() {
     }
   };
 
-  // ── Email Continue ──────────────────────────────────────────────────────
+  // Email Continue
   const handleContinue = async () => {
-    if (!email.includes("@")) {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed.includes("@") || !trimmed.includes(".")) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
 
-    setLoading(true);
+    // Returning users go straight to login; new users go to the signup form.
+    // If the check fails (offline, etc.), fall back to the signup form, which
+    // still redirects to login if the email turns out to be taken.
+    setChecking(true);
+    let exists = false;
     try {
-      // Probe whether an account exists by attempting a sign-in with a dummy password.
-      // firebase/auth no longer reliably returns sign-in methods, so this is the
-      // only way to distinguish "account exists" from "new user" without a backend.
-      await signInWithEmailAndPassword(auth, email, "____probe____");
-    } catch (error: any) {
-      if (
-        error.code === "auth/wrong-password" ||
-        error.code === "auth/invalid-credential"
-      ) {
-        // Account exists — send to login
-        router.push({ pathname: "/auth/login", params: { email } } as any);
-      } else if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/invalid-email"
-      ) {
-        // No account — start verification flow
-        router.push({ pathname: "/auth/verify-first", params: { email } } as any);
-      } else {
-        Alert.alert("Connection Error", "Check your internet connection and try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+      const res = await httpsCallable(functions, "checkEmail")({ email: trimmed });
+      exists = !!(res.data as any)?.exists;
+    } catch {}
+    setChecking(false);
+    router.push({
+      pathname: exists ? "/auth/login" : "/auth/signup-details",
+      params: { email: trimmed },
+    } as any);
   };
 
   return (
@@ -127,12 +114,10 @@ export default function GatekeeperScreen() {
           keyboardType="email-address"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>CONTINUE</Text>
-          )}
+        <TouchableOpacity style={[styles.button, checking && { opacity: 0.6 }]} onPress={handleContinue} disabled={checking}>
+          {checking
+            ? <ActivityIndicator color="#FFF" />
+            : <Text style={styles.buttonText}>CONTINUE</Text>}
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
@@ -142,7 +127,6 @@ export default function GatekeeperScreen() {
         </View>
 
         <View style={styles.socialButtons}>
-          {/* Google */}
           <TouchableOpacity
             style={[styles.socialButton, googleLoading && { opacity: 0.6 }]}
             onPress={() => googlePrompt()}
@@ -184,31 +168,33 @@ export default function GatekeeperScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   logoHeader: { marginTop: 80, marginBottom: 20, alignItems: "center", justifyContent: "center" },
-  logoImage: { width: 250, height: 150 },
+  logoImage: { width: 180, height: 180 },
   content: { width: "100%", paddingHorizontal: 30 },
   pageSubtitle: {
-    fontSize: 12, color: "#666666", textAlign: "center",
-    marginBottom: 25, letterSpacing: 2, fontWeight: "600",
+    fontFamily: F.w600,
+    fontSize: 13, color: "#666666", textAlign: "center",
+    marginBottom: 25, letterSpacing: 2,
   },
   input: {
-    backgroundColor: "#F3F4F6", color: "#000", padding: 16,
-    borderRadius: 12, fontSize: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    fontFamily: F.w400,
+    backgroundColor: "#F5F3EF", color: "#000", padding: 16,
+    borderRadius: 12, fontSize: 18, marginBottom: 16,
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   button: {
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", height: 60, justifyContent: "center",
   },
-  buttonText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 1 },
+  buttonText: { fontFamily: F.w800, color: "#FFF", fontSize: 18, letterSpacing: 1 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-  dividerText: { color: "#9CA3AF", paddingHorizontal: 10, fontSize: 12, fontWeight: "700" },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
+  dividerText: { fontFamily: F.w700, color: "#A8A49C", paddingHorizontal: 10, fontSize: 13, },
   socialButtons: { gap: 12 },
   socialButton: {
     backgroundColor: "#FFF", padding: 16, borderRadius: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },
-  socialButtonText: { color: "#000", fontWeight: "600", fontSize: 15 },
+  socialButtonText: { fontFamily: F.w600, color: "#000", fontSize: 17 },
 });

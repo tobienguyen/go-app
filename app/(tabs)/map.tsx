@@ -1,55 +1,43 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  View, Text, StyleSheet, SafeAreaView,
+  View, Text, StyleSheet, SafeAreaView, TextInput, Keyboard, Image, Platform,
   FlatList, TouchableOpacity, Dimensions, Alert, ActivityIndicator,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import {
-  collection, query, where, orderBy, onSnapshot,
-  Timestamp, writeBatch, getDocs, doc,
-} from "firebase/firestore";
-import { db } from "../../config/firebaseConfig";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Session } from "../../types";
+import { subscribeSessions } from "../../services/sessions";
+import { askGo } from "../../services/insights";
+import { Brand } from "../../constants/brand";
+import { CourtPin, SpotsBlobs } from "../../components/brand-art";
+import { F } from "../../constants/fonts";
 
-const { height } = Dimensions.get("window");
+const MAP_FRAME = require("../../assets/images/brand/map-frame.png");
 
-const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
-const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
+const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 type SessionType = "beach" | "grass" | "indoor";
 type CourtFilter = "all" | SessionType;
 
+// Buffalo / UB, used until the user's location is known
 const DEFAULT_REGION = {
-  latitude: 34.0522,
-  longitude: -118.3790,
+  latitude: 42.95,
+  longitude: -78.82,
   latitudeDelta: 0.3,
   longitudeDelta: 0.3,
 };
 
-interface Session {
-  id: string;
-  hostId: string;
-  hostName: string;
-  title: string;
-  type: SessionType;
-  price: number;
-  skillLevel: string;
-  duration: string;
-  maxPlayers: number;
-  spotsFilled: number;
-  coordinate: { latitude: number; longitude: number };
-  address: string;
-  sessionDate: any;
-  createdAt: any;
-  active: boolean;
-}
+const ASK_EXAMPLES = [
+  "Free beach games tonight",
+  "Indoor game tomorrow evening, intermediate",
+  "Anything near me this weekend with open spots",
+];
 
 function spotsLeftColor(filled: number, total: number) {
   const ratio = filled / total;
-  if (ratio >= 0.9) return "#EF4444";
-  if (ratio >= 0.6) return "#F59E0B";
-  return "#10B981";
+  if (ratio >= 0.9) return Brand.red;
+  return Brand.ink;
 }
 
 function getNextSevenDays(): Date[] {
@@ -75,12 +63,27 @@ export default function MapScreen() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [courtFilter, setCourtFilter] = useState<CourtFilter>("all");
+  const params = useLocalSearchParams<{ courtType?: string }>();
+  useEffect(() => {
+    if (params.courtType && ["beach", "grass", "indoor"].includes(params.courtType)) {
+      setCourtFilter(params.courtType as CourtFilter);
+    }
+  }, [params.courtType]);
   const [dayFilter, setDayFilter] = useState<Date | null>(null);
   const [dayDropdownOpen, setDayDropdownOpen] = useState(false);
   const [courtDropdownOpen, setCourtDropdownOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [, setLoadingLocation] = useState(true);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+
+  // Ask GO! (Gemini search)
+  const [askText, setAskText] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [aiResult, setAiResult] = useState<{ reply: string; sessions: Session[] } | null>(null);
+  const [askFocused, setAskFocused] = useState(false);
+
+  const locationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  useEffect(() => { locationRef.current = userLocation; }, [userLocation]);
 
   const nextSevenDays = useMemo(() => getNextSevenDays(), []);
 
@@ -113,61 +116,54 @@ export default function MapScreen() {
     return () => { sub?.remove(); };
   }, []);
 
-  // Clean up expired sessions on mount
+  // Upcoming games from Tiger Cloud, refreshed every 10s (expired games are
+  // filtered out by the server, so no client-side cleanup is needed)
   useEffect(() => {
-    const cleanup = async () => {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      try {
-        const expiredQ = query(
-          collection(db, "sessions"),
-          where("active", "==", true),
-          where("sessionDate", "<", Timestamp.fromDate(startOfToday))
-        );
-        const snap = await getDocs(expiredQ);
-        if (snap.empty) return;
-        const batch = writeBatch(db);
-        snap.docs.forEach(d => batch.update(doc(db, "sessions", d.id), { active: false }));
-        await batch.commit();
-      } catch {}
-    };
-    cleanup();
-  }, []);
-
-  // Live sessions from Firestore
-  useEffect(() => {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const q = query(
-      collection(db, "sessions"),
-      where("active", "==", true),
-      where("sessionDate", ">=", Timestamp.fromDate(startOfToday)),
-      orderBy("sessionDate", "asc")
+    return subscribeSessions(
+      () => ({ lat: locationRef.current?.latitude, lng: locationRef.current?.longitude }),
+      data => { setSessions(data); setSessionsLoading(false); },
+      () => setSessionsLoading(false),
     );
-    const unsub = onSnapshot(q, snapshot => {
-      const data: Session[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Session));
-      setSessions(data);
-      setSessionsLoading(false);
-    }, () => setSessionsLoading(false));
-    return unsub;
   }, []);
 
-  const filtered = useMemo(() => sessions.filter(s => {
+  const runAsk = async (text: string) => {
+    const q = text.trim();
+    if (!q) return;
+    Keyboard.dismiss();
+    setAskText(q);
+    setAsking(true);
+    try {
+      const res = await askGo(q, userLocation);
+      setAiResult({ reply: res.reply, sessions: res.sessions });
+      setDayFilter(null);
+      setCourtFilter("all");
+      setSelectedId(null);
+    } catch (e: any) {
+      Alert.alert("Ask GO!", e?.message ?? "Search is unavailable right now.");
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  const clearAsk = () => { setAiResult(null); setAskText(""); };
+
+  const baseSessions = aiResult ? aiResult.sessions : sessions;
+  const filtered = useMemo(() => baseSessions.filter(s => {
     const courtMatch = courtFilter === "all" || s.type === courtFilter;
     let dayMatch = true;
     if (dayFilter) {
-      const sd = s.sessionDate?.toDate ? s.sessionDate.toDate() : new Date(s.sessionDate);
+      const sd = new Date(s.sessionDate);
       dayMatch = sd.toDateString() === dayFilter.toDateString();
     }
     return courtMatch && dayMatch;
-  }), [sessions, courtFilter, dayFilter]);
+  }), [baseSessions, courtFilter, dayFilter]);
 
   const selectedDayLabel = dayFilter
     ? dayLabel(dayFilter, nextSevenDays.findIndex(d => d.toDateString() === dayFilter.toDateString()))
     : "All Days";
 
   const selectedCourtLabel = courtFilter === "all" ? "All Courts" :
-    `${TYPE_ICONS[courtFilter]} ${courtFilter.charAt(0).toUpperCase() + courtFilter.slice(1)}`;
+    `${courtFilter.charAt(0).toUpperCase() + courtFilter.slice(1)}`;
 
   const handleMarkerPress = (session: Session) => {
     setSelectedId(session.id);
@@ -190,7 +186,7 @@ export default function MapScreen() {
   const renderCard = ({ item }: { item: Session }) => {
     const isSelected = selectedId === item.id;
     const spotsLeft = item.maxPlayers - (item.spotsFilled ?? 0);
-    const typeColor = TYPE_COLORS[item.type] ?? "#6B7280";
+    const typeColor = TYPE_COLORS[item.type] ?? "#7D7A73";
     return (
       <TouchableOpacity
         style={[styles.card, isSelected && styles.cardSelected]}
@@ -198,9 +194,10 @@ export default function MapScreen() {
         activeOpacity={0.85}
       >
         <View style={styles.cardTop}>
-          <View style={[styles.typeBadge, { backgroundColor: typeColor + "20", borderColor: typeColor }]}>
+          <View style={[styles.typeBadge, { backgroundColor: typeColor + "10", borderColor: typeColor }]}>
+            <CourtPin type={item.type} size={16} />
             <Text style={[styles.typeBadgeText, { color: typeColor }]}>
-              {TYPE_ICONS[item.type] ?? "🏐"} {item.type?.toUpperCase()}
+              {item.type?.toUpperCase()}
             </Text>
           </View>
           <Text style={styles.cardPrice}>{item.price > 0 ? `$${item.price}/person` : "Free"}</Text>
@@ -208,18 +205,21 @@ export default function MapScreen() {
         <Text style={styles.cardTitle}>{item.title}</Text>
         {item.address ? (
           <View style={styles.cardRow}>
-            <Ionicons name="location-outline" size={13} color="#6B7280" />
-            <Text style={styles.cardMeta}>{item.address}</Text>
+            <Ionicons name="location-outline" size={13} color="#7D7A73" />
+            <Text style={styles.cardMeta}>
+              {item.address}{item.distanceKm !== undefined ? ` · ${item.distanceKm} km` : ""}
+            </Text>
           </View>
         ) : null}
         <View style={styles.cardRow}>
-          <Ionicons name="time-outline" size={13} color="#6B7280" />
+          <Ionicons name="time-outline" size={13} color="#7D7A73" />
           <Text style={styles.cardMeta}>
-            {(item as any).timeRange ?? item.duration}
+            {new Date(item.sessionDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            {" · "}{item.timeRange ?? item.duration}
           </Text>
         </View>
         <View style={styles.cardRow}>
-          <Ionicons name="person-outline" size={13} color="#6B7280" />
+          <Ionicons name="person-outline" size={13} color="#7D7A73" />
           <Text style={styles.cardMeta}>Hosted by {item.hostName} · {item.skillLevel}</Text>
         </View>
         <View style={styles.cardBottom}>
@@ -227,13 +227,15 @@ export default function MapScreen() {
             <Text style={[styles.spotsText, { color: spotsLeftColor(item.spotsFilled ?? 0, item.maxPlayers) }]}>
               {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
             </Text>
-            <Text style={styles.spotsTotal}>{item.spotsFilled ?? 0}/{item.maxPlayers} filled</Text>
+            <View style={{ marginTop: 4 }}>
+              <SpotsBlobs filled={item.spotsFilled ?? 0} total={item.maxPlayers} size={16} max={10} />
+            </View>
           </View>
           <TouchableOpacity
             style={styles.joinBtn}
-            onPress={() => Alert.alert("Join Session", "Joining sessions coming soon!")}
+            onPress={() => router.push(`/session/${item.id}` as any)}
           >
-            <Text style={styles.joinBtnText}>Join</Text>
+            <Text style={styles.joinBtnText}>{spotsLeft > 0 ? "Join" : "View"}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -253,30 +255,73 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
 
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={initialRegion}
-        showsUserLocation
-        showsMyLocationButton={false}
-        onPress={closeDropdowns}
-      >
-        {filtered.map(session => (
-          <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
-            <View style={[
-              styles.pin,
-              { backgroundColor: TYPE_COLORS[session.type] ?? "#6B7280" },
-              selectedId === session.id && styles.pinSelected,
-            ]}>
-              <Text style={styles.pinText}>{TYPE_ICONS[session.type] ?? "🏐"}</Text>
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      {/* Ask GO!: natural-language search (Gemini) */}
+      <View style={styles.askBar}>
+        <Ionicons name="sparkles" size={16} color="#7D7A73" />
+        <TextInput
+          style={styles.askInput}
+          placeholder="Ask GO! e.g. free beach games tonight"
+          placeholderTextColor="#A8A49C"
+          value={askText}
+          onChangeText={setAskText}
+          onSubmitEditing={() => runAsk(askText)}
+          onFocus={() => setAskFocused(true)}
+          onBlur={() => setAskFocused(false)}
+          returnKeyType="search"
+        />
+        {asking ? (
+          <ActivityIndicator size="small" color="#000" />
+        ) : aiResult || askText ? (
+          <TouchableOpacity onPress={clearAsk} hitSlop={10}>
+            <Ionicons name="close-circle" size={18} color="#A8A49C" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      {askFocused && !askText && !aiResult && (
+        <View style={styles.askExamples}>
+          {ASK_EXAMPLES.map(ex => (
+            <TouchableOpacity key={ex} style={styles.askChip} onPress={() => runAsk(ex)}>
+              <Text style={styles.askChipText}>{ex}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      {aiResult && (
+        <View style={styles.aiBanner}>
+          <Text style={styles.aiBannerText}>{aiResult.reply}</Text>
+          <TouchableOpacity onPress={clearAsk}>
+            <Text style={styles.aiBannerClear}>Show all</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-      {/* Filter bar */}
+      {/* The map sits inside the hand-drawn window frame */}
+      <View style={styles.mapFrame}>
+        <View style={styles.mapWindow}>
+          <MapView
+            ref={mapRef}
+            style={StyleSheet.absoluteFill}
+            mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
+            initialRegion={initialRegion}
+            showsUserLocation
+            showsMyLocationButton={false}
+            onPress={closeDropdowns}
+          >
+            {filtered.map(session => (
+              <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
+                <View style={[styles.pin, selectedId === session.id && styles.pinSelected]}>
+                  <CourtPin type={session.type} size={selectedId === session.id ? 30 : 24} />
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Image source={MAP_FRAME} style={styles.mapFrameArt} resizeMode="stretch" />
+        </View>
+      </View>
+
       <View style={styles.filterBar}>
-        {/* Day dropdown */}
         <View style={[styles.dropdownWrapper, dayDropdownOpen && { zIndex: 20 }]}>
           <TouchableOpacity
             style={[styles.dropdownTrigger, dayFilter && styles.dropdownTriggerActive]}
@@ -288,7 +333,7 @@ export default function MapScreen() {
             <Ionicons
               name={dayDropdownOpen ? "chevron-up" : "chevron-down"}
               size={13}
-              color={dayFilter ? "#FFF" : "#374151"}
+              color={dayFilter ? "#FFF" : "#3A3833"}
             />
           </TouchableOpacity>
           {dayDropdownOpen && (
@@ -319,7 +364,6 @@ export default function MapScreen() {
           )}
         </View>
 
-        {/* Court dropdown */}
         <View style={[styles.dropdownWrapper, courtDropdownOpen && { zIndex: 20 }]}>
           <TouchableOpacity
             style={[styles.dropdownTrigger, courtFilter !== "all" && styles.dropdownTriggerActive]}
@@ -331,7 +375,7 @@ export default function MapScreen() {
             <Ionicons
               name={courtDropdownOpen ? "chevron-up" : "chevron-down"}
               size={13}
-              color={courtFilter !== "all" ? "#FFF" : "#374151"}
+              color={courtFilter !== "all" ? "#FFF" : "#3A3833"}
             />
           </TouchableOpacity>
           {courtDropdownOpen && (
@@ -339,7 +383,7 @@ export default function MapScreen() {
               {(["all", "indoor", "grass", "beach"] as CourtFilter[]).map(c => {
                 const isActive = courtFilter === c;
                 const label = c === "all" ? "All Courts" :
-                  `${TYPE_ICONS[c]} ${c.charAt(0).toUpperCase() + c.slice(1)}`;
+                  `${c.charAt(0).toUpperCase() + c.slice(1)}`;
                 return (
                   <TouchableOpacity
                     key={c}
@@ -378,8 +422,10 @@ export default function MapScreen() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>🏐</Text>
-              <Text style={styles.emptyTitle}>No sessions nearby</Text>
-              <Text style={styles.emptySubtitle}>Be the first to host one!</Text>
+              <Text style={styles.emptyTitle}>{aiResult ? "No matching games" : "No sessions nearby"}</Text>
+              <Text style={styles.emptySubtitle}>
+                {aiResult ? "Try a different search, or host one yourself!" : "Be the first to host one!"}
+              </Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push("/create-session" as any)}>
                 <Text style={styles.emptyBtnText}>+ Create Session</Text>
               </TouchableOpacity>
@@ -392,32 +438,55 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
-  headerTitle: { fontSize: 20, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 22, color: "#000" },
   addBtn: {
     backgroundColor: "#000", width: 34, height: 34, borderRadius: 17,
     justifyContent: "center", alignItems: "center",
   },
-  map: { height: height * 0.36 },
+  mapFrame: { marginHorizontal: 12, marginTop: 4, aspectRatio: 1.156 },
+  // Inner window of the drawing (below the header bar, inside the side lines)
+  mapWindow: {
+    position: "absolute", top: "11.5%", left: "2.1%", right: "2.6%", bottom: "1.5%",
+    overflow: "hidden", backgroundColor: "#F5F3EF",
+  },
+  mapFrameArt: { width: "100%", height: "100%" },
+
+  askBar: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
+    backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
+  },
+  askInput: { fontFamily: F.w400, flex: 1, paddingVertical: 10, fontSize: 16, color: "#000" },
+  askExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
+  askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 10, paddingVertical: 6 },
+  askChipText: { fontFamily: F.w400, fontSize: 13, color: "#3A3833" },
+  aiBanner: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    marginHorizontal: 12, marginBottom: 8, padding: 10,
+    backgroundColor: "#000", borderRadius: 10,
+  },
+  aiBannerText: { fontFamily: F.w600, flex: 1, color: "#FFF", fontSize: 15, },
+  aiBannerClear: { fontFamily: F.w700, color: "#A8A49C", fontSize: 13, },
   pin: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 38, height: 38, borderRadius: 19,
     justifyContent: "center", alignItems: "center",
+    backgroundColor: "#FFF", borderWidth: 2, borderColor: "#111111",
     shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  pinSelected: { width: 46, height: 46, borderRadius: 23, borderWidth: 3, borderColor: "#000" },
-  pinText: { fontSize: 16 },
+  pinSelected: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: "#D0341A" },
+  pinText: { fontFamily: F.w400, fontSize: 18 },
 
-  // Filter bar
   filterBar: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 12, paddingVertical: 10,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
     gap: 8, zIndex: 10,
   },
   dropdownWrapper: {
@@ -426,30 +495,29 @@ const styles = StyleSheet.create({
   dropdownTrigger: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3",
     backgroundColor: "#FFF",
   },
   dropdownTriggerActive: { backgroundColor: "#000", borderColor: "#000" },
-  dropdownTriggerText: { fontSize: 13, fontWeight: "600", color: "#374151" },
+  dropdownTriggerText: { fontFamily: F.w600, fontSize: 15, color: "#3A3833" },
   dropdownTriggerTextActive: { color: "#FFF" },
   dropdownMenu: {
     position: "absolute", top: 38, left: 0,
     backgroundColor: "#FFF", borderRadius: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
     shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 }, elevation: 12,
     minWidth: 150, overflow: "hidden", zIndex: 100,
   },
   dropdownItem: {
     paddingHorizontal: 16, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
-  dropdownItemActive: { backgroundColor: "#F3F4F6" },
-  dropdownItemText: { fontSize: 14, fontWeight: "500", color: "#374151" },
-  dropdownItemTextActive: { fontWeight: "700", color: "#000" },
-  filterCount: { marginLeft: "auto", fontSize: 12, color: "#9CA3AF", fontWeight: "500" },
+  dropdownItemActive: { backgroundColor: "#F5F3EF" },
+  dropdownItemText: { fontFamily: F.w500, fontSize: 16, color: "#3A3833" },
+  dropdownItemTextActive: { fontFamily: F.w700, color: "#000" },
+  filterCount: { fontFamily: F.w500, marginLeft: "auto", fontSize: 13, color: "#A8A49C", },
 
-  // Cards
   list: { padding: 12, gap: 10, paddingBottom: 30 },
   card: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
@@ -459,24 +527,24 @@ const styles = StyleSheet.create({
   },
   cardSelected: { borderColor: "#000" },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
-  typeBadgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
-  cardPrice: { fontSize: 14, fontWeight: "700", color: "#000" },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8 },
+  typeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
+  typeBadgeText: { fontFamily: F.w700, fontSize: 12, letterSpacing: 0.5 },
+  cardPrice: { fontFamily: F.w700, fontSize: 16, color: "#000" },
+  cardTitle: { fontFamily: F.w700, fontSize: 18, color: "#000", marginBottom: 8 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
-  cardMeta: { fontSize: 13, color: "#6B7280", flex: 1 },
+  cardMeta: { fontFamily: F.w400, fontSize: 15, color: "#7D7A73", flex: 1 },
   cardBottom: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6",
+    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
-  spotsText: { fontSize: 13, fontWeight: "700" },
-  spotsTotal: { fontSize: 11, color: "#9CA3AF", marginTop: 2 },
+  spotsText: { fontFamily: F.w700, fontSize: 15, },
+  spotsTotal: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", marginTop: 2 },
   joinBtn: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 9, borderRadius: 10 },
-  joinBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
+  joinBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 16 },
   emptyState: { alignItems: "center", paddingVertical: 60, paddingHorizontal: 20 },
-  emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#000", marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: "#9CA3AF", marginBottom: 20 },
+  emptyEmoji: { fontFamily: F.w400, fontSize: 54, marginBottom: 12 },
+  emptyTitle: { fontFamily: F.w700, fontSize: 20, color: "#000", marginBottom: 6 },
+  emptySubtitle: { fontFamily: F.w400, fontSize: 16, color: "#A8A49C", marginBottom: 20 },
   emptyBtn: { backgroundColor: "#000", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  emptyBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
+  emptyBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 17 },
 });

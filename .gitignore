@@ -45,5 +45,8 @@ desktop.ini
 # Remove the line below if you WANT to upload the example folder
 app-example/
 
+# Cloud Functions build output
+functions/lib/
+
 # Local Claude Code settings
 .claude/

@@ -3,29 +3,30 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   SafeAreaView, Alert, ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { updateProfile, updatePassword } from "firebase/auth";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
-import { createUser } from "../../services/users";
+import { setPendingSkillLevel } from "../../services/users";
+import { F } from "../../constants/fonts";
 
 const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", "Advanced", "Pro"];
 
 export default function SignupDetails() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
 
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [skillLevel, setSkillLevel] = useState("Beginner");
   const [loading, setLoading] = useState(false);
 
-  const handleFinishSetup = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert("Session Expired", "Please start over.");
+  // Step 2 of signup: the Firebase account is only created here, with the
+  // user's own password. They join GO!'s player list (Tiger) after verifying.
+  const handleCreateAccount = async () => {
+    if (!email) {
       router.replace("/auth" as any);
       return;
     }
-
     if (!name.trim()) {
       Alert.alert("Missing Info", "Please enter your name.");
       return;
@@ -37,39 +38,44 @@ export default function SignupDetails() {
 
     setLoading(true);
     try {
-      // Replace the temporary password with the one the user chose
-      await updatePassword(user, password);
-
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName: name.trim() });
-
-      await createUser(user.uid, {
-        name: name.trim(),
-        email: user.email ?? "",
-      });
-
-      router.replace("/(tabs)" as any);
+      setPendingSkillLevel(skillLevel);
+      try {
+        await sendEmailVerification(user);
+      } catch {
+        // The next screen has a "Resend link" button
+      }
+      router.replace({ pathname: "/auth/verify-first", params: { email } } as any);
     } catch (error: any) {
-      Alert.alert("Setup Failed", error.message ?? "Something went wrong.");
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert("You already have an account", "Log in with your password instead.");
+        router.replace({ pathname: "/auth/login", params: { email } } as any);
+      } else if (error.code === "auth/invalid-email") {
+        Alert.alert("Invalid Email", "Please go back and check your email address.");
+      } else if (error.code === "auth/weak-password") {
+        Alert.alert("Weak Password", "Try a longer password.");
+      } else {
+        Alert.alert("Couldn't create account", "Check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const user = auth.currentUser;
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Complete your profile</Text>
-        <Text style={styles.subtitle}>Signing up as {user?.email}</Text>
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>Signing up as {email}</Text>
       </View>
 
       <View style={styles.form}>
         <Text style={styles.label}>Full Name</Text>
         <TextInput
           style={styles.input}
-          placeholder="John Doe"
-          placeholderTextColor="#9CA3AF"
+          placeholder="Jane Doe"
+          placeholderTextColor="#A8A49C"
           value={name}
           onChangeText={setName}
         />
@@ -78,7 +84,7 @@ export default function SignupDetails() {
         <TextInput
           style={styles.input}
           placeholder="At least 6 characters"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#A8A49C"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -98,14 +104,14 @@ export default function SignupDetails() {
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={{ fontSize: 12, color: "#9CA3AF", marginTop: 8 }}>
+        <Text style={{ fontSize: 13, color: "#A8A49C", marginTop: 8 }}>
           You can change this anytime in your profile.
         </Text>
 
-        <TouchableOpacity style={styles.mainButton} onPress={handleFinishSetup} disabled={loading}>
+        <TouchableOpacity style={styles.mainButton} onPress={handleCreateAccount} disabled={loading}>
           {loading
             ? <ActivityIndicator color="#FFF" />
-            : <Text style={styles.mainButtonText}>Finish Setup</Text>
+            : <Text style={styles.mainButtonText}>Create Account</Text>
           }
         </TouchableOpacity>
       </View>
@@ -116,25 +122,26 @@ export default function SignupDetails() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
   header: { padding: 30, marginTop: 20 },
-  title: { fontSize: 28, fontWeight: "800", color: "#000" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 5 },
+  title: { fontFamily: F.w800, fontSize: 31, color: "#000" },
+  subtitle: { fontFamily: F.w400, fontSize: 16, color: "#666", marginTop: 5 },
   form: { paddingHorizontal: 30 },
-  label: { fontSize: 14, fontWeight: "600", color: "#000", marginBottom: 8, marginTop: 15 },
+  label: { fontFamily: F.w600, fontSize: 16, color: "#000", marginBottom: 8, marginTop: 15 },
   input: {
-    backgroundColor: "#F3F4F6", padding: 16, borderRadius: 12,
-    fontSize: 16, borderWidth: 1, borderColor: "#E5E7EB", color: "#000",
+    fontFamily: F.w400,
+    backgroundColor: "#F5F3EF", padding: 16, borderRadius: 12,
+    fontSize: 18, borderWidth: 1, borderColor: "#ECE9E3", color: "#000",
   },
   skillContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 5, gap: 8 },
   skillBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
+    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10,
+    borderWidth: 1, borderColor: "#ECE9E3", alignItems: "center",
   },
   skillBtnActive: { backgroundColor: "#000", borderColor: "#000" },
-  skillBtnText: { color: "#666", fontWeight: "600" },
+  skillBtnText: { fontFamily: F.w600, color: "#666", },
   skillBtnTextActive: { color: "#FFF" },
   mainButton: {
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", marginTop: 40, height: 60, justifyContent: "center",
   },
-  mainButtonText: { color: "#FFF", fontWeight: "700", fontSize: 16 },
+  mainButtonText: { fontFamily: F.w700, color: "#FFF", fontSize: 18 },
 });

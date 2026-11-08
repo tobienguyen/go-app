@@ -3,19 +3,24 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig'; // Ensure this path matches your file structure
+import { auth } from '../config/firebaseConfig';
+import { ensureMyProfile } from "../services/users";
 import 'react-native-reanimated';
+import { useFonts, Gaegu_400Regular, Gaegu_700Bold } from '@expo-google-fonts/gaegu';
 
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View } from 'react-native';
+import { FoxIntro } from '../components/fox-anim';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);
+  const [fontsLoaded] = useFonts({ Gaegu_400Regular, Gaegu_700Bold });
   const segments = useSegments();
   const router = useRouter();
 
-  // 1. Listen for Auth State Changes (Keeps user signed in)
+  // Track the signed-in user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -25,79 +30,78 @@ export default function RootLayout() {
     return unsubscribe;
   }, [initializing]);
 
-  // 2. Navigation Guard
+  // Route users based on sign-in and verification state
   useEffect(() => {
     if (initializing) return;
 
     const inAuthGroup = (segments as any)[0] === 'auth';
-    const onVerifyScreen = (segments as any)[1] === 'verify-email';
-    const onVerifyFirst = (segments as any)[1] === 'verify-first';
+    const onVerifyScreen  = (segments as any)[1] === 'verify-email';
+    const onVerifyFirst   = (segments as any)[1] === 'verify-first';
     const onSignupDetails = (segments as any)[1] === 'signup-details';
 
-    // Social sign-in users (Google/Apple) don't go through signup-details —
-    // they already have a verified email and their profile is created automatically.
+    // Google/Apple users skip email verification; their provider already verified it.
     const isSocialUser = user?.providerData?.some(
       (p) => p.providerId !== 'password'
     ) ?? false;
 
     if (!user && !inAuthGroup) {
-      // Not logged in — send to gatekeeper
       router.replace('/auth' as any);
-    } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst) {
+    } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst && !onSignupDetails) {
       // Logged in but email not verified — hold at verify screen
       router.replace('/auth/verify-email' as any);
-    } else if (
-      user && user.emailVerified && !user.displayName &&
-      !isSocialUser && !onSignupDetails
-    ) {
-      // Email user verified but hasn't set up profile yet
-      router.replace('/auth/signup-details' as any);
-    } else if (
-      user && user.emailVerified &&
-      (user.displayName || isSocialUser) &&
-      inAuthGroup
-    ) {
+    } else if (user && (user.emailVerified || isSocialUser) && inAuthGroup && !onVerifyFirst && !onVerifyScreen) {
       // Fully set up and stuck on auth screens — let into the app
       router.replace('/(tabs)' as any);
     }
   }, [user, segments, initializing, router]);
 
-  // Show nothing (or a splash screen) while checking the login status
-  if (initializing) return null;
+  // Make sure every verified user is on GO!'s player list in Tiger
+  // (covers logging in later, or verifying and then closing the app).
+  useEffect(() => {
+    if (!user) return;
+    const isSocial = user.providerData?.some(p => p.providerId !== 'password') ?? false;
+    if (user.emailVerified || isSocial) ensureMyProfile().catch(() => {});
+  }, [user]);
+
+  // Wait until Firebase reports the sign-in state
+  if (initializing || !fontsLoaded) return null;
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <View style={{ flex: 1 }}>
       <Stack>
-        {/* The Tab system (Home, Map, etc.) */}
         <Stack.Screen 
           name="(tabs)" 
           options={{ headerShown: false }} 
         />
         
-        {/* The Auth system (Login, Sign-up) */}
         <Stack.Screen
           name="auth"
           options={{ headerShown: false }}
         />
         
-        {/* Session creation screen */}
         <Stack.Screen
           name="create-session"
           options={{ headerShown: false, presentation: 'modal' }}
         />
 
-        {/* Session detail screen */}
         <Stack.Screen
           name="session/[id]"
           options={{ headerShown: false }}
         />
 
-        {/* Modals and other standalone screens */}
+        <Stack.Screen
+          name="user/[id]"
+          options={{ headerShown: false }}
+        />
+
         <Stack.Screen
           name="modal"
           options={{ presentation: 'modal', title: 'Details' }}
         />
       </Stack>
+      {showIntro && <FoxIntro onDone={() => setShowIntro(false)} />}
+      </View>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

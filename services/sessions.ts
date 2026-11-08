@@ -1,68 +1,49 @@
-import {
-  collection, doc, getDoc, query, where, orderBy,
-  onSnapshot, writeBatch, increment, arrayUnion, arrayRemove,
-  Timestamp, QueryConstraint,
-} from "firebase/firestore";
-import { db } from "../config/firebaseConfig";
-import { Session } from "../types";
+import { callApi, poll } from "./api";
+import { Session, CourtType } from "../types";
 
-export async function getSession(id: string): Promise<Session | null> {
-  const snap = await getDoc(doc(db, "sessions", id));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Session;
+export function listSessions(params: { lat?: number; lng?: number; courtType?: string } = {}) {
+  return callApi<Session[]>("listSessions", params);
 }
 
+/** Upcoming games, refreshed every 10 seconds so new pins appear live. */
 export function subscribeSessions(
-  filters: { date?: Date | null; courtType?: string },
+  getParams: () => { lat?: number; lng?: number },
   onData: (sessions: Session[]) => void,
   onError?: (e: Error) => void,
 ): () => void {
-  const constraints: QueryConstraint[] = [
-    where("active", "==", true),
-    orderBy("sessionDate", "asc"),
-  ];
-
-  if (filters.date) {
-    const dayStart = Timestamp.fromDate(filters.date);
-    const next = new Date(filters.date);
-    next.setDate(next.getDate() + 1);
-    const dayEnd = Timestamp.fromDate(next);
-    constraints.push(where("sessionDate", ">=", dayStart));
-    constraints.push(where("sessionDate", "<", dayEnd));
-  }
-
-  if (filters.courtType && filters.courtType !== "all") {
-    constraints.push(where("type", "==", filters.courtType));
-  }
-
-  const q = query(collection(db, "sessions"), ...constraints);
-  return onSnapshot(
-    q,
-    snap => onData(snap.docs.map(d => ({ id: d.id, ...d.data() } as Session))),
-    onError,
-  );
+  return poll(() => listSessions(getParams()), 10_000, onData, onError);
 }
 
-export async function joinSession(sessionId: string, uid: string): Promise<void> {
-  const batch = writeBatch(db);
-  batch.update(doc(db, "sessions", sessionId), {
-    spotsFilled: increment(1),
-    attendees: arrayUnion(uid),
-  });
-  batch.update(doc(db, "users", uid), {
-    sessionsAttended: increment(1),
-  });
-  await batch.commit();
+export function getSession(id: string) {
+  return callApi<Session | null>("getSession", { id });
 }
 
-export async function leaveSession(sessionId: string, uid: string): Promise<void> {
-  const batch = writeBatch(db);
-  batch.update(doc(db, "sessions", sessionId), {
-    spotsFilled: increment(-1),
-    attendees: arrayRemove(uid),
-  });
-  batch.update(doc(db, "users", uid), {
-    sessionsAttended: increment(-1),
-  });
-  await batch.commit();
+export function createSession(data: {
+  title: string;
+  description: string;
+  type: CourtType;
+  price: number;
+  skillLevel: string;
+  date: string;        // YYYY-MM-DD (local)
+  startTime: string;   // "7:00 PM"
+  endTime: string;
+  maxPlayers: number;
+  coordinate: { latitude: number; longitude: number };
+  address: string;
+}) {
+  return callApi<Session>("createSession", data);
+}
+
+export function joinSession(id: string) {
+  return callApi<Session>("joinSession", { id });
+}
+
+export function leaveSession(id: string) {
+  return callApi<Session>("leaveSession", { id });
+}
+
+/** Local calendar date as YYYY-MM-DD (not UTC). */
+export function localDateString(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }

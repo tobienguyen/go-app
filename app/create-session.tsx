@@ -9,11 +9,9 @@ import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import {
-  collection, doc, serverTimestamp, Timestamp,
-  writeBatch, increment, getDoc,
-} from "firebase/firestore";
-import { auth, db } from "../config/firebaseConfig";
+import { createSession, localDateString } from "../services/sessions";
+import { CourtScene } from "../components/brand-art";
+import { F } from "../constants/fonts";
 
 const { height } = Dimensions.get("window");
 
@@ -45,8 +43,9 @@ const DATE_OPTIONS = buildDateOptions();
 
 type CourtType = "beach" | "grass" | "indoor";
 
+// Buffalo / UB, used until the user's location is known
 const DEFAULT_REGION = {
-  latitude: 34.0522, longitude: -118.3790,
+  latitude: 42.95, longitude: -78.82,
   latitudeDelta: 0.05, longitudeDelta: 0.05,
 };
 
@@ -63,10 +62,11 @@ function computeDuration(start: string, end: string): string {
   const diff = timeToMinutes(end) - timeToMinutes(start);
   if (diff <= 0) return "";
   const h = Math.floor(diff / 60), m = diff % 60;
+  if (h === 0) return `${m}m`;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-// ── Drum-roll wheel picker ────────────────────────────────────────────────────
+// Drum-roll wheel picker
 function WheelPicker({ items, value, onChange, width = 72 }: {
   items: string[];
   value: string;
@@ -92,12 +92,11 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
 
   return (
     <View style={{ width, height: ITEM_H * 5, overflow: "hidden" }}>
-      {/* selection band */}
       <View pointerEvents="none" style={[
         StyleSheet.absoluteFill,
         {
           top: ITEM_H * 2, bottom: ITEM_H * 2,
-          borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#D1D5DB",
+          borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#D9D5CD",
           height: ITEM_H, position: "absolute",
         },
       ]} />
@@ -119,8 +118,8 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
           <View key={i} style={{ height: ITEM_H, justifyContent: "center", alignItems: "center" }}>
             <Text style={{
               fontSize: i === activeIdx ? 22 : 18,
-              fontWeight: i === activeIdx ? "700" : "400",
-              color: i === activeIdx ? "#000" : "#9CA3AF",
+              fontFamily: i === activeIdx ? F.w700 : F.w400,
+              color: i === activeIdx ? "#000" : "#A8A49C",
             }}>
               {item}
             </Text>
@@ -131,7 +130,7 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
   );
 }
 
-// ── Time picker modal ─────────────────────────────────────────────────────────
+// Time picker modal
 function TimePickerModal({ visible, initial, label, onConfirm, onCancel }: {
   visible: boolean;
   initial: string | null;
@@ -187,7 +186,7 @@ function TimePickerModal({ visible, initial, label, onConfirm, onCancel }: {
   );
 }
 
-// ── Dropdown modal ─────────────────────────────────────────────────────────────
+// Dropdown modal
 function DropdownModal<T extends string>({ visible, options, selected, onSelect, onClose }: {
   visible: boolean;
   options: { label: string; value: T }[];
@@ -220,12 +219,11 @@ function DropdownModal<T extends string>({ visible, options, selected, onSelect,
   );
 }
 
-// ── Main screen ────────────────────────────────────────────────────────────────
+// Main screen
 export default function CreateSessionScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const uid = auth.currentUser?.uid ?? "";
 
   const [pin, setPin]           = useState<{ latitude: number; longitude: number } | null>(null);
   const [address, setAddress]   = useState("");
@@ -243,7 +241,6 @@ export default function CreateSessionScreen() {
   const [dateIdx, setDateIdx]     = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Dropdown / modal visibility
   const [dateOpen, setDateOpen]   = useState(false);
   const [skillOpen, setSkillOpen] = useState(false);
   const [timePicker, setTimePicker] = useState<"start" | "end" | null>(null);
@@ -301,45 +298,21 @@ export default function CreateSessionScreen() {
     if (!startTime || !endTime) { Alert.alert("Missing Time", "Please set a start and end time."); return; }
     if (!timeValid)    { Alert.alert("Invalid Time", "End time must be after start time."); return; }
 
-    const parsedPrice = parseFloat(price) || 0;
-    const sessionDate = Timestamp.fromDate(DATE_OPTIONS[dateIdx].date);
-    const durationStr = computeDuration(startTime, endTime);
-    const timeRange   = `${startTime} – ${endTime}`;
-
     setSubmitting(true);
     try {
-      const userSnap = await getDoc(doc(db, "users", uid));
-      const userData = userSnap.data();
-      const hostName = userData?.name || auth.currentUser?.email?.split("@")[0] || "Anonymous";
-      const hostInitials = hostName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-
-      const batch = writeBatch(db);
-
-      const sessionRef = doc(collection(db, "sessions"));
-      batch.set(sessionRef, {
-        hostId: uid, hostName, hostInitials,
-        title: title.trim(), description: description.trim(),
-        type: courtType, price: parsedPrice, skillLevel,
-        startTime, endTime, duration: durationStr, timeRange,
-        maxPlayers, spotsFilled: 0,
+      await createSession({
+        title: title.trim(),
+        description: description.trim(),
+        type: courtType,
+        price: parseFloat(price) || 0,
+        skillLevel,
+        date: localDateString(DATE_OPTIONS[dateIdx].date),
+        startTime,
+        endTime,
+        maxPlayers,
         coordinate: { latitude: pin.latitude, longitude: pin.longitude },
         address: address || "See map",
-        sessionDate, createdAt: serverTimestamp(), active: true,
       });
-
-      const postRef = doc(collection(db, "posts"));
-      batch.set(postRef, {
-        type: "session", authorId: uid, authorName: hostName, authorInitials: hostInitials,
-        authorPosition: userData?.positions?.[0] || userData?.experience || "Player",
-        content: title.trim(), likes: 0, likedBy: [], comments: 0,
-        createdAt: serverTimestamp(), sessionId: sessionRef.id,
-        sessionType: courtType, sessionLocation: address || "See map",
-        sessionPrice: parsedPrice, sessionSkillLevel: skillLevel,
-        sessionDuration: durationStr, sessionTimeRange: timeRange,
-      });
-
-      batch.update(doc(db, "users", uid), { sessionsHosted: increment(1) });
-      await batch.commit();
       router.replace("/(tabs)/map" as any);
     } catch (e: any) {
       Alert.alert("Error", "Could not create session. Try again.");
@@ -364,7 +337,6 @@ export default function CreateSessionScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* Map */}
           <View style={styles.mapSection}>
             <Text style={styles.mapLabel}>Tap to place pin · Drag to fine-tune</Text>
             <View style={styles.mapWrapper}>
@@ -385,7 +357,7 @@ export default function CreateSessionScreen() {
             </View>
             {address ? (
               <View style={styles.addressRow}>
-                <Ionicons name="location" size={14} color="#6B7280" />
+                <Ionicons name="location" size={14} color="#7D7A73" />
                 <Text style={styles.addressText}>{address}</Text>
               </View>
             ) : (
@@ -394,16 +366,14 @@ export default function CreateSessionScreen() {
           </View>
 
           <View style={styles.formSection}>
-            {/* Date */}
             <View style={styles.field}>
               <Text style={styles.label}>Session Date</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setDateOpen(true)}>
                 <Text style={styles.dropdownBtnText}>{DATE_OPTIONS[dateIdx].label}</Text>
-                <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                <Ionicons name="chevron-down" size={16} color="#7D7A73" />
               </TouchableOpacity>
             </View>
 
-            {/* Time */}
             <View style={styles.field}>
               <View style={styles.timeLabelRow}>
                 <Text style={styles.label}>Time</Text>
@@ -418,19 +388,19 @@ export default function CreateSessionScreen() {
                   style={[styles.timeTrigger, startTime && styles.timeTriggerFilled]}
                   onPress={() => setTimePicker("start")}
                 >
-                  <Ionicons name="time-outline" size={15} color={startTime ? "#000" : "#9CA3AF"} />
+                  <Ionicons name="time-outline" size={15} color={startTime ? "#000" : "#A8A49C"} />
                   <Text style={[styles.timeTriggerText, startTime && styles.timeTriggerTextFilled]}>
                     {startTime ?? "Start time"}
                   </Text>
                 </TouchableOpacity>
 
-                <Ionicons name="arrow-forward" size={14} color="#9CA3AF" />
+                <Ionicons name="arrow-forward" size={14} color="#A8A49C" />
 
                 <TouchableOpacity
                   style={[styles.timeTrigger, endTime && styles.timeTriggerFilled]}
                   onPress={() => setTimePicker("end")}
                 >
-                  <Ionicons name="time-outline" size={15} color={endTime ? "#000" : "#9CA3AF"} />
+                  <Ionicons name="time-outline" size={15} color={endTime ? "#000" : "#A8A49C"} />
                   <Text style={[styles.timeTriggerText, endTime && styles.timeTriggerTextFilled]}>
                     {endTime ?? "End time"}
                   </Text>
@@ -441,19 +411,17 @@ export default function CreateSessionScreen() {
               )}
             </View>
 
-            {/* Session Name */}
             <View style={styles.field}>
               <Text style={styles.label}>Session Name</Text>
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Sunset Beach 4v4"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#A8A49C"
                 value={title}
                 onChangeText={setTitle}
               />
             </View>
 
-            {/* Description */}
             <View style={styles.field}>
               <Text style={styles.label}>
                 Description <Text style={styles.labelOptional}>(optional)</Text>
@@ -461,7 +429,7 @@ export default function CreateSessionScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Any extra details — skill expectations, what to bring, parking..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#A8A49C"
                 value={description}
                 onChangeText={setDesc}
                 multiline
@@ -470,18 +438,17 @@ export default function CreateSessionScreen() {
               />
             </View>
 
-            {/* Court Type */}
             <View style={styles.field}>
               <Text style={styles.label}>Court Type</Text>
               <View style={styles.chipRow}>
                 {COURT_TYPES.map(ct => (
                   <TouchableOpacity
                     key={ct.value}
-                    style={[styles.chip, courtType === ct.value && styles.chipActive]}
+                    style={[styles.courtTile, courtType === ct.value && styles.courtTileActive]}
                     onPress={() => setCourtType(ct.value)}
                   >
-                    <Text style={styles.chipIcon}>{ct.icon}</Text>
-                    <Text style={[styles.chipText, courtType === ct.value && styles.chipTextActive]}>
+                    <CourtScene type={ct.value} height={56} />
+                    <Text style={[styles.chipText, courtType === ct.value && styles.courtTileTextActive]}>
                       {ct.label}
                     </Text>
                   </TouchableOpacity>
@@ -489,16 +456,14 @@ export default function CreateSessionScreen() {
               </View>
             </View>
 
-            {/* Skill Level */}
             <View style={styles.field}>
               <Text style={styles.label}>Skill Level</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setSkillOpen(true)}>
                 <Text style={styles.dropdownBtnText}>{skillLevel}</Text>
-                <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                <Ionicons name="chevron-down" size={16} color="#7D7A73" />
               </TouchableOpacity>
             </View>
 
-            {/* Max Players */}
             <View style={styles.field}>
               <View style={styles.sliderLabelRow}>
                 <Text style={styles.label}>Max Players</Text>
@@ -512,7 +477,7 @@ export default function CreateSessionScreen() {
                 value={maxPlayers}
                 onValueChange={v => setMax(Math.round(v))}
                 minimumTrackTintColor="#000"
-                maximumTrackTintColor="#E5E7EB"
+                maximumTrackTintColor="#ECE9E3"
                 thumbTintColor="#000"
               />
               <View style={styles.sliderTicks}>
@@ -522,7 +487,6 @@ export default function CreateSessionScreen() {
               </View>
             </View>
 
-            {/* Price */}
             <View style={styles.field}>
               <Text style={styles.label}>Price per Person</Text>
               <View style={styles.priceRow}>
@@ -530,7 +494,7 @@ export default function CreateSessionScreen() {
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="0 for free"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#A8A49C"
                   value={price}
                   onChangeText={setPrice}
                   keyboardType="decimal-pad"
@@ -557,7 +521,6 @@ export default function CreateSessionScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Date dropdown */}
       <DropdownModal
         visible={dateOpen}
         options={dateOptions}
@@ -566,7 +529,6 @@ export default function CreateSessionScreen() {
         onClose={() => setDateOpen(false)}
       />
 
-      {/* Skill dropdown */}
       <DropdownModal
         visible={skillOpen}
         options={skillOptions}
@@ -575,7 +537,6 @@ export default function CreateSessionScreen() {
         onClose={() => setSkillOpen(false)}
       />
 
-      {/* Time picker */}
       <TimePickerModal
         visible={timePicker !== null}
         initial={timePicker === "start" ? startTime : endTime}
@@ -591,91 +552,94 @@ export default function CreateSessionScreen() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// Styles
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 12, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "800", color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 20, color: "#000" },
   scroll: { paddingBottom: 20 },
   mapSection: { backgroundColor: "#FFF", marginBottom: 12, padding: 16 },
-  mapLabel: { fontSize: 14, fontWeight: "600", color: "#000", marginBottom: 10 },
+  mapLabel: { fontFamily: F.w600, fontSize: 16, color: "#000", marginBottom: 10 },
   mapWrapper: { borderRadius: 14, overflow: "hidden", height: height * 0.28 },
   map: { flex: 1 },
   mapOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#F3F4F6", justifyContent: "center", alignItems: "center", zIndex: 10,
+    backgroundColor: "#F5F3EF", justifyContent: "center", alignItems: "center", zIndex: 10,
   },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  addressText: { fontSize: 13, color: "#6B7280", flex: 1 },
-  addressHint: { fontSize: 13, color: "#9CA3AF", marginTop: 10, textAlign: "center" },
+  addressText: { fontFamily: F.w400, fontSize: 15, color: "#7D7A73", flex: 1 },
+  addressHint: { fontFamily: F.w400, fontSize: 15, color: "#A8A49C", marginTop: 10, textAlign: "center" },
   formSection: { backgroundColor: "#FFF", padding: 16 },
   field: { marginBottom: 22 },
-  label: { fontSize: 14, fontWeight: "700", color: "#000", marginBottom: 10 },
-  labelOptional: { fontSize: 12, color: "#9CA3AF", fontWeight: "400" },
+  label: { fontFamily: F.w700, fontSize: 16, color: "#000", marginBottom: 10 },
+  labelOptional: { fontFamily: F.w400, fontSize: 13, color: "#A8A49C", },
   input: {
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
-    borderRadius: 12, padding: 14, fontSize: 15, color: "#000",
+    fontFamily: F.w400,
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
+    borderRadius: 12, padding: 14, fontSize: 17, color: "#000",
   },
   textArea: { minHeight: 80, paddingTop: 12 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3", backgroundColor: "#FAF9F6",
   },
+  courtTile: {
+    flex: 1, alignItems: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 6,
+    borderRadius: 14, borderWidth: 1.5, borderColor: "#ECE9E3", backgroundColor: "#FFF",
+  },
+  courtTileActive: { borderColor: "#D0341A", borderWidth: 2 },
+  courtTileTextActive: { fontFamily: F.w800, color: "#111111", },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
-  chipIcon: { fontSize: 14 },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#374151" },
+  chipIcon: { fontFamily: F.w400, fontSize: 16 },
+  chipText: { fontFamily: F.w600, fontSize: 15, color: "#3A3833" },
   chipTextActive: { color: "#FFF" },
 
-  // Dropdown button
   dropdownBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14,
   },
-  dropdownBtnText: { fontSize: 15, fontWeight: "600", color: "#000" },
+  dropdownBtnText: { fontFamily: F.w600, fontSize: 17, color: "#000" },
 
-  // Time row
   timeLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   durationBadge: { backgroundColor: "#000", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
-  durationBadgeText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  durationBadgeText: { fontFamily: F.w700, color: "#FFF", fontSize: 13, },
   timeRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   timeTrigger: {
     flex: 1, flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, paddingHorizontal: 12, paddingVertical: 13,
   },
   timeTriggerFilled: { borderColor: "#000", backgroundColor: "#FFF" },
-  timeTriggerText: { fontSize: 14, fontWeight: "500", color: "#9CA3AF" },
-  timeTriggerTextFilled: { color: "#000", fontWeight: "600" },
-  timeError: { fontSize: 12, color: "#EF4444", marginTop: 6 },
+  timeTriggerText: { fontFamily: F.w500, fontSize: 16, color: "#A8A49C" },
+  timeTriggerTextFilled: { fontFamily: F.w600, color: "#000", },
+  timeError: { fontFamily: F.w400, fontSize: 13, color: "#D0341A", marginTop: 6 },
 
-  // Slider
   sliderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
   sliderValueBadge: { backgroundColor: "#000", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  sliderValueText: { color: "#FFF", fontWeight: "800", fontSize: 14 },
+  sliderValueText: { fontFamily: F.w800, color: "#FFF", fontSize: 16 },
   slider: { width: "100%", height: 40 },
   sliderTicks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4, marginTop: -4 },
-  sliderTick: { fontSize: 11, color: "#9CA3AF", fontWeight: "500" },
+  sliderTick: { fontFamily: F.w500, fontSize: 12, color: "#A8A49C", },
 
-  // Price
   priceRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  priceDollar: { fontSize: 18, fontWeight: "700", color: "#000" },
+  priceDollar: { fontFamily: F.w700, fontSize: 20, color: "#000" },
   freeBtn: { marginTop: 8 },
-  freeBtnText: { fontSize: 13, color: "#6B7280", fontWeight: "600" },
+  freeBtnText: { fontFamily: F.w600, fontSize: 15, color: "#7D7A73", },
 
   footer: {
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   submitBtn: { backgroundColor: "#000", paddingVertical: 18, borderRadius: 14, alignItems: "center" },
-  submitBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 0.5 },
+  submitBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 18, letterSpacing: 0.5 },
 });
 
 const modal = StyleSheet.create({
@@ -690,21 +654,20 @@ const modal = StyleSheet.create({
     shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
-  title: { fontSize: 17, fontWeight: "800", color: "#000", marginBottom: 20 },
+  title: { fontFamily: F.w800, fontSize: 19, color: "#000", marginBottom: 20 },
   wheelRow: {
     flexDirection: "row", alignItems: "center", gap: 4,
     marginBottom: 24,
   },
-  colon: { fontSize: 28, fontWeight: "700", color: "#000", marginBottom: 4, paddingHorizontal: 2 },
+  colon: { fontFamily: F.w700, fontSize: 31, color: "#000", marginBottom: 4, paddingHorizontal: 2 },
   confirmBtn: {
     backgroundColor: "#000", width: "100%", paddingVertical: 15,
     borderRadius: 14, alignItems: "center", marginBottom: 10,
   },
-  confirmText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+  confirmText: { fontFamily: F.w800, color: "#FFF", fontSize: 18 },
   cancelTouch: { paddingVertical: 6 },
-  cancelText: { color: "#9CA3AF", fontSize: 14, fontWeight: "600" },
+  cancelText: { fontFamily: F.w600, color: "#A8A49C", fontSize: 16, },
 
-  // Dropdown modal
   dropdownCard: {
     backgroundColor: "#FFF", borderRadius: 16,
     width: "100%", overflow: "hidden",
@@ -714,9 +677,9 @@ const modal = StyleSheet.create({
   dropdownItem: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingVertical: 15,
-    borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
   dropdownItemActive: { backgroundColor: "#000" },
-  dropdownItemText: { fontSize: 15, fontWeight: "500", color: "#374151" },
-  dropdownItemTextActive: { color: "#FFF", fontWeight: "700" },
+  dropdownItemText: { fontFamily: F.w500, fontSize: 17, color: "#3A3833" },
+  dropdownItemTextActive: { fontFamily: F.w700, color: "#FFF", },
 });
