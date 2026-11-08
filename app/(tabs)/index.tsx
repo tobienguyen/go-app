@@ -359,9 +359,12 @@ export default function HomeScreen() {
         keyboardVerticalOffset={90}
       >
         <View style={styles.header}>
-          <Text style={styles.headerLogo}>
-            Go<Text style={styles.headerLogoAccent}>!</Text>
-          </Text>
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={styles.headerLogo}
+            resizeMode="contain"
+            accessibilityLabel="GO!"
+          />
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.headerIcon}>
               <Ionicons name="notifications-outline" size={24} color="#000" />
@@ -415,8 +418,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
   },
-  headerLogo: { fontSize: 28, fontWeight: "900", color: "#000", letterSpacing: -1 },
-  headerLogoAccent: { fontStyle: "italic" },
+  headerLogo: { width: 44, height: 44 },
   headerIcons: { flexDirection: "row", gap: 8 },
   headerIcon: { padding: 4 },
   feed: { paddingBottom: 20 },
