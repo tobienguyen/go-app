@@ -58,8 +58,8 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
       ]),
       // fox leaps in from the left and lands on the ball
       Animated.parallel([
-        Animated.timing(foxOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(leap, { toValue: 1, duration: 1150, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(foxOpacity, { toValue: 1, duration: 160, useNativeDriver: true }),
+        Animated.timing(leap, { toValue: 1, duration: 1400, easing: Easing.linear, useNativeDriver: true }),
       ]),
       // little "landed" bounce of the whole logo
       Animated.sequence([
@@ -75,8 +75,8 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // start with the fox half on screen at the left edge, so the whole jump is visible
-  const startX = -((width - size) / 2 + size * SHIFT_RIGHT) - size * 0.3;
+  // start with the whole fox (tails included) just inside the left edge of the screen
+  const startX = -((width - size) / 2 + size * SHIFT_RIGHT) + size * 0.02;
   const foxX = leap.interpolate({ inputRange: [0, 1], outputRange: [startX, 0] });
   const foxY = leap.interpolate({ inputRange: ARC_T, outputRange: ARC_Y.map(v => v * size * 0.9) });
   const foxRotate = leap.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["-22deg", "0deg", "10deg"] });
