@@ -122,7 +122,6 @@ export default function UserProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#000" />
@@ -132,7 +131,6 @@ export default function UserProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Avatar + name + follow */}
         <View style={styles.card}>
           <View style={styles.topRow}>
             {profile.photoURL ? (
@@ -151,7 +149,6 @@ export default function UserProfileScreen() {
             </View>
           </View>
 
-          {/* Stats row */}
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{followerCount}</Text>
@@ -169,7 +166,6 @@ export default function UserProfileScreen() {
             </View>
           </View>
 
-          {/* Follow button */}
           <TouchableOpacity
             style={[followBtnStyle, followLoading && { opacity: 0.6 }]}
             onPress={handleFollow}
@@ -186,7 +182,6 @@ export default function UserProfileScreen() {
           ) : null}
         </View>
 
-        {/* Media */}
         {rows.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Media</Text>

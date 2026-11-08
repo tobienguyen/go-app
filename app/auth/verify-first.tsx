@@ -9,10 +9,8 @@ import { auth } from "../../config/firebaseConfig";
 import { ensureMyProfile } from "../../services/users";
 import { Ionicons } from "@expo/vector-icons";
 
-// Step 3 of signup: the account was just created on the signup form and a
-// Firebase verification link was emailed. Once verified, the player is added
-// to GO!'s player list in Tiger and enters the app.
-// (The previous Twilio 6-digit code flow lives in archive/twilio-verify/.)
+// Step 3 of signup: wait for the user to tap the emailed verification link,
+// then add them to GO!'s player list in Tiger and enter the app.
 
 export default function VerifyFirstScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();

@@ -64,7 +64,7 @@ function computeDuration(start: string, end: string): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-// ── Drum-roll wheel picker ────────────────────────────────────────────────────
+// Drum-roll wheel picker
 function WheelPicker({ items, value, onChange, width = 72 }: {
   items: string[];
   value: string;
@@ -90,7 +90,6 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
 
   return (
     <View style={{ width, height: ITEM_H * 5, overflow: "hidden" }}>
-      {/* selection band */}
       <View pointerEvents="none" style={[
         StyleSheet.absoluteFill,
         {
@@ -129,7 +128,7 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
   );
 }
 
-// ── Time picker modal ─────────────────────────────────────────────────────────
+// Time picker modal
 function TimePickerModal({ visible, initial, label, onConfirm, onCancel }: {
   visible: boolean;
   initial: string | null;
@@ -185,7 +184,7 @@ function TimePickerModal({ visible, initial, label, onConfirm, onCancel }: {
   );
 }
 
-// ── Dropdown modal ─────────────────────────────────────────────────────────────
+// Dropdown modal
 function DropdownModal<T extends string>({ visible, options, selected, onSelect, onClose }: {
   visible: boolean;
   options: { label: string; value: T }[];
@@ -218,7 +217,7 @@ function DropdownModal<T extends string>({ visible, options, selected, onSelect,
   );
 }
 
-// ── Main screen ────────────────────────────────────────────────────────────────
+// Main screen
 export default function CreateSessionScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
@@ -240,7 +239,6 @@ export default function CreateSessionScreen() {
   const [dateIdx, setDateIdx]     = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Dropdown / modal visibility
   const [dateOpen, setDateOpen]   = useState(false);
   const [skillOpen, setSkillOpen] = useState(false);
   const [timePicker, setTimePicker] = useState<"start" | "end" | null>(null);
@@ -337,7 +335,6 @@ export default function CreateSessionScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* Map */}
           <View style={styles.mapSection}>
             <Text style={styles.mapLabel}>Tap to place pin · Drag to fine-tune</Text>
             <View style={styles.mapWrapper}>
@@ -367,7 +364,6 @@ export default function CreateSessionScreen() {
           </View>
 
           <View style={styles.formSection}>
-            {/* Date */}
             <View style={styles.field}>
               <Text style={styles.label}>Session Date</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setDateOpen(true)}>
@@ -376,7 +372,6 @@ export default function CreateSessionScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Time */}
             <View style={styles.field}>
               <View style={styles.timeLabelRow}>
                 <Text style={styles.label}>Time</Text>
@@ -414,7 +409,6 @@ export default function CreateSessionScreen() {
               )}
             </View>
 
-            {/* Session Name */}
             <View style={styles.field}>
               <Text style={styles.label}>Session Name</Text>
               <TextInput
@@ -426,7 +420,6 @@ export default function CreateSessionScreen() {
               />
             </View>
 
-            {/* Description */}
             <View style={styles.field}>
               <Text style={styles.label}>
                 Description <Text style={styles.labelOptional}>(optional)</Text>
@@ -443,7 +436,6 @@ export default function CreateSessionScreen() {
               />
             </View>
 
-            {/* Court Type */}
             <View style={styles.field}>
               <Text style={styles.label}>Court Type</Text>
               <View style={styles.chipRow}>
@@ -462,7 +454,6 @@ export default function CreateSessionScreen() {
               </View>
             </View>
 
-            {/* Skill Level */}
             <View style={styles.field}>
               <Text style={styles.label}>Skill Level</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setSkillOpen(true)}>
@@ -471,7 +462,6 @@ export default function CreateSessionScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Max Players */}
             <View style={styles.field}>
               <View style={styles.sliderLabelRow}>
                 <Text style={styles.label}>Max Players</Text>
@@ -495,7 +485,6 @@ export default function CreateSessionScreen() {
               </View>
             </View>
 
-            {/* Price */}
             <View style={styles.field}>
               <Text style={styles.label}>Price per Person</Text>
               <View style={styles.priceRow}>
@@ -530,7 +519,6 @@ export default function CreateSessionScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Date dropdown */}
       <DropdownModal
         visible={dateOpen}
         options={dateOptions}
@@ -539,7 +527,6 @@ export default function CreateSessionScreen() {
         onClose={() => setDateOpen(false)}
       />
 
-      {/* Skill dropdown */}
       <DropdownModal
         visible={skillOpen}
         options={skillOptions}
@@ -548,7 +535,6 @@ export default function CreateSessionScreen() {
         onClose={() => setSkillOpen(false)}
       />
 
-      {/* Time picker */}
       <TimePickerModal
         visible={timePicker !== null}
         initial={timePicker === "start" ? startTime : endTime}
@@ -564,7 +550,7 @@ export default function CreateSessionScreen() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// Styles
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F3F4F6" },
   header: {
@@ -606,7 +592,6 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, fontWeight: "600", color: "#374151" },
   chipTextActive: { color: "#FFF" },
 
-  // Dropdown button
   dropdownBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
@@ -614,7 +599,6 @@ const styles = StyleSheet.create({
   },
   dropdownBtnText: { fontSize: 15, fontWeight: "600", color: "#000" },
 
-  // Time row
   timeLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   durationBadge: { backgroundColor: "#000", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
   durationBadgeText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
@@ -629,7 +613,6 @@ const styles = StyleSheet.create({
   timeTriggerTextFilled: { color: "#000", fontWeight: "600" },
   timeError: { fontSize: 12, color: "#EF4444", marginTop: 6 },
 
-  // Slider
   sliderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
   sliderValueBadge: { backgroundColor: "#000", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
   sliderValueText: { color: "#FFF", fontWeight: "800", fontSize: 14 },
@@ -637,7 +620,6 @@ const styles = StyleSheet.create({
   sliderTicks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4, marginTop: -4 },
   sliderTick: { fontSize: 11, color: "#9CA3AF", fontWeight: "500" },
 
-  // Price
   priceRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   priceDollar: { fontSize: 18, fontWeight: "700", color: "#000" },
   freeBtn: { marginTop: 8 },
@@ -677,7 +659,6 @@ const modal = StyleSheet.create({
   cancelTouch: { paddingVertical: 6 },
   cancelText: { color: "#9CA3AF", fontSize: 14, fontWeight: "600" },
 
-  // Dropdown modal
   dropdownCard: {
     backgroundColor: "#FFF", borderRadius: 16,
     width: "100%", overflow: "hidden",

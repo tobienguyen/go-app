@@ -21,13 +21,9 @@ import { handleGoogleSignIn, handleAppleSignIn } from "../../utils/socialAuth";
 
 WebBrowser.maybeCompleteAuthSession();
 
-// ─── Replace these with your own from Firebase Console ──────────────────────
-// Firebase Console → Project Settings → Your Apps → Web app → OAuth 2.0 Client IDs
-// Google Cloud Console → APIs & Services → Credentials
 const GOOGLE_IOS_CLIENT_ID = undefined; // Add iOS client ID when you register an iOS app in Firebase
 const GOOGLE_ANDROID_CLIENT_ID = undefined; // Add Android client ID after adding SHA-1 in Firebase
 const GOOGLE_WEB_CLIENT_ID = "760211922089-c3nmfede113rlfssmm6rj9jeagvgj0o8.apps.googleusercontent.com";
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function GatekeeperScreen() {
   const [email, setEmail] = useState("");
@@ -35,7 +31,7 @@ export default function GatekeeperScreen() {
   const [appleLoading, setAppleLoading] = useState(false);
   const router = useRouter();
 
-  // ── Google OAuth ────────────────────────────────────────────────────────
+  // Google OAuth
   const [, googleResponse, googlePrompt] = Google.useAuthRequest({
     iosClientId: GOOGLE_WEB_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
@@ -53,7 +49,7 @@ export default function GatekeeperScreen() {
     }
   }, [googleResponse, router]);
 
-  // ── Apple Sign-In ───────────────────────────────────────────────────────
+  // Apple Sign-In
   const onApplePress = async () => {
     setAppleLoading(true);
     try {
@@ -68,7 +64,7 @@ export default function GatekeeperScreen() {
     }
   };
 
-  // ── Email Continue ──────────────────────────────────────────────────────
+  // Email Continue
   const handleContinue = () => {
     const trimmed = email.trim();
     if (!trimmed.includes("@") || !trimmed.includes(".")) {
@@ -116,7 +112,6 @@ export default function GatekeeperScreen() {
         </View>
 
         <View style={styles.socialButtons}>
-          {/* Google */}
           <TouchableOpacity
             style={[styles.socialButton, googleLoading && { opacity: 0.6 }]}
             onPress={() => googlePrompt()}

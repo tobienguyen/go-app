@@ -22,7 +22,7 @@ const TZ = "America/New_York";
 type Ctx = { db: Pool; uid: string; data: any };
 type Handler = (ctx: Ctx) => Promise<any>;
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// Helpers
 
 function str(v: any, max = 500): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -86,10 +86,10 @@ async function searchSessions(
   return rows.map(toSession);
 }
 
-// ── Actions ─────────────────────────────────────────────────────────────────
+// Actions
 
 const actions: Record<string, Handler> = {
-  // Sessions ----------------------------------------------------------------
+  // Sessions
   async listSessions({ db, data }) {
     return searchSessions(db, {
       lat: num(data.lat), lng: num(data.lng),
@@ -184,7 +184,7 @@ const actions: Record<string, Handler> = {
     return getSessionById(db, id);
   },
 
-  // Court Pulse: reads the TimescaleDB continuous aggregate ------------------
+  // Court Pulse: reads the TimescaleDB continuous aggregate
   async courtPulse({ db, data }) {
     const court = str(data.courtName, 200);
     if (!court) {
@@ -219,7 +219,7 @@ const actions: Record<string, Handler> = {
     };
   },
 
-  // Weekly leaderboard: reads the player_activity_weekly continuous aggregate --
+  // Weekly leaderboard: reads the player_activity_weekly continuous aggregate
   async leaderboard({ db }) {
     const { rows } = await db.query(
       `select p.user_id, u.name, u.positions[1] as position, u.photo_url,
@@ -239,7 +239,7 @@ const actions: Record<string, Handler> = {
     }));
   },
 
-  // Ask GO!: Gemini parses the request, Tiger runs the search ---------------
+  // Ask GO!: Gemini parses the request, Tiger runs the search
   async askGo({ db, data }) {
     const query = str(data.query, 300);
     if (!query) throw new HttpsError("invalid-argument", "Type what kind of game you're looking for.");
@@ -254,7 +254,7 @@ const actions: Record<string, Handler> = {
     return { reply: parsed.reply, filters: parsed.filters, sessions };
   },
 
-  // Users -------------------------------------------------------------------
+  // Users
   async getUser({ db, data }) {
     const { rows } = await db.query(`select * from users where id = $1`, [str(data.uid, 128)]);
     return rows[0] ? toUser(rows[0]) : null;
@@ -295,7 +295,7 @@ const actions: Record<string, Handler> = {
     return rows[0] ? toUser(rows[0]) : null;
   },
 
-  // Follows (friend requests) -----------------------------------------------
+  // Follows (friend requests)
   async followRequest({ db, uid, data }) {
     const toUid = str(data.toUid, 128);
     if (!toUid || toUid === uid) throw new HttpsError("invalid-argument", "Can't follow that user.");
@@ -353,7 +353,7 @@ const actions: Record<string, Handler> = {
     return { followers: rows[0]?.followers ?? 0, following: rows[0]?.following ?? 0 };
   },
 
-  // Feed --------------------------------------------------------------------
+  // Feed
   async feed({ db, data }) {
     const limit = Math.min(Math.max(num(data.limit) ?? 50, 1), 100);
     const { rows } = await db.query(
@@ -397,7 +397,7 @@ const actions: Record<string, Handler> = {
   },
 };
 
-// ── Entry point ─────────────────────────────────────────────────────────────
+// Entry point
 
 export const api = onCall(
   {

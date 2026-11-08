@@ -306,9 +306,7 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* Filter bar */}
       <View style={styles.filterBar}>
-        {/* Day dropdown */}
         <View style={[styles.dropdownWrapper, dayDropdownOpen && { zIndex: 20 }]}>
           <TouchableOpacity
             style={[styles.dropdownTrigger, dayFilter && styles.dropdownTriggerActive]}
@@ -351,7 +349,6 @@ export default function MapScreen() {
           )}
         </View>
 
-        {/* Court dropdown */}
         <View style={[styles.dropdownWrapper, courtDropdownOpen && { zIndex: 20 }]}>
           <TouchableOpacity
             style={[styles.dropdownTrigger, courtFilter !== "all" && styles.dropdownTriggerActive]}
@@ -439,7 +436,6 @@ const styles = StyleSheet.create({
   },
   map: { height: height * 0.36 },
 
-  // Ask GO!
   askBar: {
     flexDirection: "row", alignItems: "center", gap: 8,
     marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
@@ -465,7 +461,6 @@ const styles = StyleSheet.create({
   pinSelected: { width: 46, height: 46, borderRadius: 23, borderWidth: 3, borderColor: "#000" },
   pinText: { fontSize: 16 },
 
-  // Filter bar
   filterBar: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 12, paddingVertical: 10,
@@ -501,7 +496,6 @@ const styles = StyleSheet.create({
   dropdownItemTextActive: { fontWeight: "700", color: "#000" },
   filterCount: { marginLeft: "auto", fontSize: 12, color: "#9CA3AF", fontWeight: "500" },
 
-  // Cards
   list: { padding: 12, gap: 10, paddingBottom: 30 },
   card: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,

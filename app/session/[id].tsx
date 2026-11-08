@@ -92,7 +92,6 @@ export default function SessionDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Map snippet */}
         <View style={styles.mapWrapper}>
           <MapView
             style={styles.map}
@@ -109,7 +108,6 @@ export default function SessionDetailScreen() {
           >
             <Marker coordinate={session.coordinate} pinColor={typeColor} />
           </MapView>
-          {/* Type badge overlay */}
           <View style={[styles.typeBadgeOverlay, { backgroundColor: typeColor }]}>
             <Text style={styles.typeBadgeText}>
               {TYPE_ICONS[session.type] ?? "🏐"}  {session.type?.toUpperCase()}
@@ -118,14 +116,12 @@ export default function SessionDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          {/* Title + host */}
           <Text style={styles.title}>{session.title}</Text>
           <View style={styles.hostRow}>
             <Ionicons name="person-circle-outline" size={18} color="#9CA3AF" />
             <Text style={styles.hostText}>Hosted by {session.hostName}</Text>
           </View>
 
-          {/* Spots bar */}
           <View style={styles.spotsCard}>
             <View style={styles.spotsRow}>
               <Text style={[styles.spotsLeft, { color: spotsColor }]}>
@@ -146,7 +142,6 @@ export default function SessionDetailScreen() {
             </View>
           </View>
 
-          {/* Detail rows */}
           <View style={styles.detailsCard}>
             {session.sessionDate && (
               <DetailRow
@@ -175,7 +170,6 @@ export default function SessionDetailScreen() {
             refreshKey={pulseKey}
           />
 
-          {/* Description */}
           {session.description ? (
             <View style={styles.descriptionCard}>
               <Text style={styles.descriptionLabel}>About this session</Text>
@@ -185,7 +179,6 @@ export default function SessionDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Join footer */}
       <View style={styles.footer}>
         <View style={styles.footerPrice}>
           <Text style={styles.footerPriceValue}>

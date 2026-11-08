@@ -56,7 +56,6 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Edit drafts
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDesc] = useState("");
   const [draftPositions, setDraftPositions] = useState<string[]>([]);
@@ -245,7 +244,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
         {editing ? (
@@ -270,7 +268,6 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* ── Avatar + Info ──────────────────────────────────────────── */}
         <View style={styles.card}>
           <TouchableOpacity
             onPress={editing ? pickAvatar : undefined}
@@ -332,7 +329,6 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
-        {/* ── Positions ─────────────────────────────────────────────── */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Positions</Text>
 
@@ -358,14 +354,12 @@ export default function ProfileScreen() {
             </>
           ) : positions.length > 0 ? (
             <View>
-              {/* #1 — prominent */}
               <View style={styles.pos1Row}>
                 <View style={styles.pos1Chip}>
                   <Text style={styles.pos1Rank}>#1</Text>
                   <Text style={styles.pos1Label}>{positions[0]}</Text>
                 </View>
               </View>
-              {/* #2 and #3 */}
               {positions.length > 1 && (
                 <View style={styles.pos23Row}>
                   {positions.slice(1).map((pos, i) => (
@@ -382,7 +376,6 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* ── Skill Level + Media ────────────────────────────────────── */}
         <View style={styles.card}>
           {editing ? (
             <>
@@ -507,7 +500,6 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* ── Stats ─────────────────────────────────────────────────── */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Stats</Text>
           <View style={styles.statsRow}>
@@ -526,7 +518,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* ── Recent Posts ───────────────────────────────────────────── */}
         {posts.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Recent Sessions</Text>
@@ -569,7 +560,6 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* ── Sign Out ───────────────────────────────────────────────── */}
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
           <Ionicons name="log-out-outline" size={18} color="#EF4444" />
           <Text style={styles.signOutText}>Sign Out</Text>
@@ -597,13 +587,11 @@ const styles = StyleSheet.create({
   editBtnText: { fontSize: 14, fontWeight: "600", color: "#000" },
   scroll: { padding: 12, gap: 12, paddingBottom: 40 },
 
-  // Card
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16 },
   sectionTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 12 },
   sectionHint: { fontSize: 12, color: "#9CA3AF", marginBottom: 10, marginTop: -6 },
   emptyNote: { fontSize: 13, color: "#9CA3AF", fontStyle: "italic" },
 
-  // Avatar
   avatarWrapper: { alignSelf: "center", position: "relative", marginBottom: 12 },
   avatarImage: { width: 88, height: 88, borderRadius: 44 },
   avatarFallback: {
@@ -630,7 +618,6 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 12, fontSize: 14, color: "#000", minHeight: 72,
   },
 
-  // Positions
   pos1Row: { marginBottom: 10 },
   pos1Chip: {
     flexDirection: "row", alignItems: "center", gap: 8,
@@ -660,7 +647,6 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, fontWeight: "600", color: "#374151" },
   chipTextActive: { color: "#FFF" },
 
-  // Skill + Media
   skillLevelTag: { fontSize: 13, fontWeight: "600", color: "#6B7280", marginBottom: 12 },
   mediaRemoveBadge: {
     position: "absolute", top: 4, right: 4,
@@ -683,7 +669,6 @@ const styles = StyleSheet.create({
   },
   videoBadgeText: { color: "#FFF", fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
 
-  // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
     flex: 1, backgroundColor: "#F9FAFB", borderRadius: 12,
@@ -692,7 +677,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 24, fontWeight: "800", color: "#000", marginBottom: 4 },
   statLabel: { fontSize: 11, color: "#9CA3AF", textAlign: "center", lineHeight: 15 },
 
-  // Posts
   postCard: {
     backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12,
     borderWidth: 1, borderColor: "#F3F4F6",
@@ -706,7 +690,6 @@ const styles = StyleSheet.create({
   postRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   postMeta: { fontSize: 12, color: "#9CA3AF", flex: 1 },
 
-  // Sign out
   signOutBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14, borderRadius: 12,

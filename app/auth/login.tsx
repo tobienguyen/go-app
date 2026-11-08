@@ -26,7 +26,7 @@ export default function Login() {
   const [appleLoading, setAppleLoading] = useState(false);
   const router = useRouter();
 
-  // ── Google OAuth ────────────────────────────────────────────────────────
+  // Google OAuth
   const [, googleResponse, googlePrompt] = Google.useAuthRequest({
     iosClientId: GOOGLE_WEB_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
@@ -44,7 +44,7 @@ export default function Login() {
     }
   }, [googleResponse, router]);
 
-  // ── Apple Sign-In ───────────────────────────────────────────────────────
+  // Apple Sign-In
   const onApplePress = async () => {
     setAppleLoading(true);
     try {
@@ -59,7 +59,7 @@ export default function Login() {
     }
   };
 
-  // ── Email / Password Login ──────────────────────────────────────────────
+  // Email / Password Login
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Missing Fields", "Please enter your email and password.");
@@ -136,7 +136,6 @@ export default function Login() {
         </View>
 
         <View style={styles.socialButtons}>
-          {/* Google */}
           <TouchableOpacity
             style={[styles.socialButton, googleLoading && { opacity: 0.6 }]}
             onPress={() => googlePrompt()}

@@ -32,7 +32,7 @@ export async function withTransaction<T>(p: Pool, fn: (c: PoolClient) => Promise
   }
 }
 
-// ── Shapes the app already expects (kept compatible with the old Firestore docs) ──
+// Database rows -> the shapes the app expects
 
 const TZ = "America/New_York";
 

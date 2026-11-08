@@ -16,7 +16,7 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
 
-  // 1. Listen for Auth State Changes (Keeps user signed in)
+  // Track the signed-in user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -26,7 +26,7 @@ export default function RootLayout() {
     return unsubscribe;
   }, [initializing]);
 
-  // 2. Navigation Guard
+  // Route users based on sign-in and verification state
   useEffect(() => {
     if (initializing) return;
 
@@ -35,8 +35,7 @@ export default function RootLayout() {
     const onVerifyFirst   = (segments as any)[1] === 'verify-first';
     const onSignupDetails = (segments as any)[1] === 'signup-details';
 
-    // Social sign-in users (Google/Apple) don't go through signup-details —
-    // they already have a verified email and their profile is created automatically.
+    // Google/Apple users skip email verification; their provider already verified it.
     const isSocialUser = user?.providerData?.some(
       (p) => p.providerId !== 'password'
     ) ?? false;
@@ -52,39 +51,35 @@ export default function RootLayout() {
     }
   }, [user, segments, initializing, router]);
 
-  // 3. Make sure every verified user is on GO!'s player list in Tiger
-  //    (covers logging in later, or verifying and then closing the app).
+  // Make sure every verified user is on GO!'s player list in Tiger
+  // (covers logging in later, or verifying and then closing the app).
   useEffect(() => {
     if (!user) return;
     const isSocial = user.providerData?.some(p => p.providerId !== 'password') ?? false;
     if (user.emailVerified || isSocial) ensureMyProfile().catch(() => {});
   }, [user]);
 
-  // Show nothing (or a splash screen) while checking the login status
+  // Wait until Firebase reports the sign-in state
   if (initializing) return null;
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        {/* The Tab system (Home, Map, etc.) */}
         <Stack.Screen 
           name="(tabs)" 
           options={{ headerShown: false }} 
         />
         
-        {/* The Auth system (Login, Sign-up) */}
         <Stack.Screen
           name="auth"
           options={{ headerShown: false }}
         />
         
-        {/* Session creation screen */}
         <Stack.Screen
           name="create-session"
           options={{ headerShown: false, presentation: 'modal' }}
         />
 
-        {/* Session detail screen */}
         <Stack.Screen
           name="session/[id]"
           options={{ headerShown: false }}
@@ -95,7 +90,6 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
 
-        {/* Modals and other standalone screens */}
         <Stack.Screen
           name="modal"
           options={{ presentation: 'modal', title: 'Details' }}

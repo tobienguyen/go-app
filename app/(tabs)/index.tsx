@@ -246,7 +246,6 @@ export default function HomeScreen() {
 
     return (
       <View style={styles.postCard}>
-        {/* Header */}
         <View style={styles.postHeader}>
           <TouchableOpacity
             onPress={() => item.authorId !== uid && router.push(`/user/${item.authorId}` as any)}
@@ -274,7 +273,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Session card — tappable */}
         {item.type === "session" ? (
           <TouchableOpacity
             style={styles.sessionBanner}
@@ -326,7 +324,6 @@ export default function HomeScreen() {
           </>
         )}
 
-        {/* Actions */}
         <View style={styles.postActions}>
           <TouchableOpacity style={styles.actionBtn} onPress={() => toggleLike(item)}>
             <Ionicons
