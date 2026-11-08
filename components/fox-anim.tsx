@@ -19,7 +19,7 @@ const POSES = [
 // Which pose shows at each point of the leap (0 = takeoff, 1 = landed)
 const POSE_WINDOWS: [number, number][] = [[0, 0.45], [0.45, 0.8], [0.8, 1.01]];
 // How much of the leap each pose change takes to blend in (instead of a hard cut)
-const POSE_FADE = 0.3;
+const POSE_FADE = 0.12;
 // The intro canvas is a bit larger than the logo's (room for the tails), so
 // scale it up to keep the ball the same size on screen.
 const CANVAS_SCALE = 555 / 489;
