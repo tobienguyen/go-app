@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { MediaItem, UserProfile, Post } from "../../types";
 import { getUserPosts } from "../../services/posts";
 import { Brand } from "../../constants/brand";
+import { CourtPin } from "../../components/brand-art";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_W   = SCREEN_W - 32;
@@ -35,7 +36,6 @@ function buildMediaRows(items: MediaItem[]): MediaItem[][] {
 
 const POSITIONS = ["Setter", "Libero", "Outside Hitter", "Middle Blocker", "Opposite", "Right Side", "DS"];
 const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", "Advanced", "Pro"];
-const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 
 
@@ -529,8 +529,9 @@ export default function ProfileScreen() {
                   <View key={post.id} style={styles.postCard}>
                     <View style={styles.postTop}>
                       <View style={[styles.postTypeBadge, { backgroundColor: typeColor + "20", borderColor: typeColor }]}>
+                        <CourtPin type={post.sessionType ?? ""} size={14} />
                         <Text style={[styles.postTypeBadgeText, { color: typeColor }]}>
-                          {TYPE_ICONS[post.sessionType ?? ""] ?? "🏐"} {post.sessionType?.toUpperCase()}
+                          {post.sessionType?.toUpperCase()}
                         </Text>
                       </View>
                       {(post.sessionPrice ?? 0) > 0 ? (
@@ -683,7 +684,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#F5F3EF",
   },
   postTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-  postTypeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
+  postTypeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   postTypeBadgeText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
   postPrice: { fontSize: 12, fontWeight: "700", color: "#000" },
   postFree: { fontSize: 12, fontWeight: "700", color: "#111111" },

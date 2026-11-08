@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { createSession, localDateString } from "../services/sessions";
+import { CourtScene } from "../components/brand-art";
 
 const { height } = Dimensions.get("window");
 
@@ -442,11 +443,11 @@ export default function CreateSessionScreen() {
                 {COURT_TYPES.map(ct => (
                   <TouchableOpacity
                     key={ct.value}
-                    style={[styles.chip, courtType === ct.value && styles.chipActive]}
+                    style={[styles.courtTile, courtType === ct.value && styles.courtTileActive]}
                     onPress={() => setCourtType(ct.value)}
                   >
-                    <Text style={styles.chipIcon}>{ct.icon}</Text>
-                    <Text style={[styles.chipText, courtType === ct.value && styles.chipTextActive]}>
+                    <CourtScene type={ct.value} height={56} />
+                    <Text style={[styles.chipText, courtType === ct.value && styles.courtTileTextActive]}>
                       {ct.label}
                     </Text>
                   </TouchableOpacity>
@@ -587,6 +588,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 9,
     borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3", backgroundColor: "#FAF9F6",
   },
+  courtTile: {
+    flex: 1, alignItems: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 6,
+    borderRadius: 14, borderWidth: 1.5, borderColor: "#ECE9E3", backgroundColor: "#FFF",
+  },
+  courtTileActive: { borderColor: "#D0341A", borderWidth: 2 },
+  courtTileTextActive: { color: "#111111", fontWeight: "800" },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
   chipIcon: { fontSize: 14 },
   chipText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },

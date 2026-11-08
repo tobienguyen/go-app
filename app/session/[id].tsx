@@ -11,9 +11,9 @@ import { Session } from "../../types";
 import { getSession, joinSession, leaveSession } from "../../services/sessions";
 import { CourtPulseCard } from "../../components/court-pulse";
 import { Brand } from "../../constants/brand";
+import { CourtPin, CourtScene, SpotsBlobs } from "../../components/brand-art";
 
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
-const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏟️" };
 
 export default function SessionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -109,14 +109,14 @@ export default function SessionDetailScreen() {
           >
             <Marker coordinate={session.coordinate} pinColor={Brand.red} />
           </MapView>
-          <View style={[styles.typeBadgeOverlay, { backgroundColor: typeColor }]}>
-            <Text style={styles.typeBadgeText}>
-              {TYPE_ICONS[session.type] ?? "🏐"}  {session.type?.toUpperCase()}
-            </Text>
+          <View style={styles.typeBadgeOverlay}>
+            <CourtPin type={session.type} size={18} />
+            <Text style={styles.typeBadgeText}>{session.type?.toUpperCase()}</Text>
           </View>
         </View>
 
         <View style={styles.content}>
+          <CourtScene type={session.type} height={130} style={styles.scene} />
           <Text style={styles.title}>{session.title}</Text>
           <View style={styles.hostRow}>
             <Ionicons name="person-circle-outline" size={18} color="#A8A49C" />
@@ -132,15 +132,7 @@ export default function SessionDetailScreen() {
                 {session.spotsFilled ?? 0} / {session.maxPlayers} filled
               </Text>
             </View>
-            <View style={styles.progressTrack}>
-              <View style={[
-                styles.progressFill,
-                {
-                  width: `${Math.min(((session.spotsFilled ?? 0) / session.maxPlayers) * 100, 100)}%`,
-                  backgroundColor: spotsColor,
-                }
-              ]} />
-            </View>
+            <SpotsBlobs filled={session.spotsFilled ?? 0} total={session.maxPlayers} size={26} max={16} />
           </View>
 
           <View style={styles.detailsCard}>
@@ -236,9 +228,11 @@ const styles = StyleSheet.create({
   typeBadgeOverlay: {
     position: "absolute", top: 16, left: 16,
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 20, backgroundColor: "#FFF",
+    flexDirection: "row", alignItems: "center", gap: 6,
   },
-  typeBadgeText: { color: "#FFF", fontWeight: "800", fontSize: 13, letterSpacing: 0.5 },
+  scene: { marginBottom: 12 },
+  typeBadgeText: { color: "#111111", fontWeight: "800", fontSize: 13, letterSpacing: 0.5 },
   content: { padding: 16, gap: 14 },
   title: { fontSize: 24, fontWeight: "800", color: "#000", lineHeight: 30 },
   hostRow: { flexDirection: "row", alignItems: "center", gap: 6 },

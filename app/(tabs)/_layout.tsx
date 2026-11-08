@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { TabIcon, TAB_ICONS } from '../../components/brand-art';
 
 export default function TabLayout() {
   return (
@@ -8,7 +8,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#A8A49C',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
+          height: 88,
+          paddingTop: 6,
           borderTopWidth: 1,
           borderTopColor: '#ECE9E3',
           backgroundColor: '#FFF',
@@ -19,28 +22,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.home} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
           title: 'Map',
-          tabBarIcon: ({ color }) => <Ionicons name="map-outline" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.map} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Leaderboard',
-          tabBarIcon: ({ color }) => <Ionicons name="trophy-outline" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.leaderboard} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.profile} focused={focused} />,
         }}
       />
       {/* Hide files not used as tabs */}

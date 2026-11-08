@@ -12,10 +12,10 @@ import { auth, storage } from "../../config/firebaseConfig";
 import { getUser } from "../../services/users";
 import { subscribeFeed, createPost, toggleLike as toggleLikeApi } from "../../services/posts";
 import { Brand } from "../../constants/brand";
+import { CourtPin, CourtScene } from "../../components/brand-art";
 
 const AVATAR_COLORS = ["#111111"];
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
-const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏟️" };
 
 function avatarColor(uid: string): string {
   let hash = 0;
@@ -285,12 +285,14 @@ export default function HomeScreen() {
                 styles.sessionTypeBadge,
                 { backgroundColor: (TYPE_COLORS[item.sessionType ?? ""] ?? "#7D7A73") + "20" }
               ]}>
+                <CourtPin type={item.sessionType ?? ""} size={16} />
                 <Text style={[styles.sessionTypeText, { color: TYPE_COLORS[item.sessionType ?? ""] ?? "#7D7A73" }]}>
-                  {TYPE_ICONS[item.sessionType ?? ""] ?? "🏐"} {(item.sessionType ?? "").toUpperCase()}
+                  {(item.sessionType ?? "").toUpperCase()}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#A8A49C" />
             </View>
+            {item.sessionType ? <CourtScene type={item.sessionType} height={96} style={{ marginVertical: 6 }} /> : null}
             <Text style={styles.sessionBannerTitle}>{item.content}</Text>
             <View style={styles.sessionMeta}>
               {item.sessionLocation ? (
@@ -477,7 +479,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", marginBottom: 8,
   },
   sessionTypeBadge: {
-    alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+    alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
   },
   sessionTypeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
   sessionBannerTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 8 },

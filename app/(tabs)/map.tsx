@@ -11,11 +11,11 @@ import { Session } from "../../types";
 import { subscribeSessions } from "../../services/sessions";
 import { askGo } from "../../services/insights";
 import { Brand } from "../../constants/brand";
+import { CourtPin, SpotsBlobs } from "../../components/brand-art";
 
 const { height } = Dimensions.get("window");
 
 const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
-const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
 type SessionType = "beach" | "grass" | "indoor";
 type CourtFilter = "all" | SessionType;
 
@@ -156,7 +156,7 @@ export default function MapScreen() {
     : "All Days";
 
   const selectedCourtLabel = courtFilter === "all" ? "All Courts" :
-    `${TYPE_ICONS[courtFilter]} ${courtFilter.charAt(0).toUpperCase() + courtFilter.slice(1)}`;
+    `${courtFilter.charAt(0).toUpperCase() + courtFilter.slice(1)}`;
 
   const handleMarkerPress = (session: Session) => {
     setSelectedId(session.id);
@@ -187,9 +187,10 @@ export default function MapScreen() {
         activeOpacity={0.85}
       >
         <View style={styles.cardTop}>
-          <View style={[styles.typeBadge, { backgroundColor: typeColor + "20", borderColor: typeColor }]}>
+          <View style={[styles.typeBadge, { backgroundColor: typeColor + "10", borderColor: typeColor }]}>
+            <CourtPin type={item.type} size={16} />
             <Text style={[styles.typeBadgeText, { color: typeColor }]}>
-              {TYPE_ICONS[item.type] ?? "🏐"} {item.type?.toUpperCase()}
+              {item.type?.toUpperCase()}
             </Text>
           </View>
           <Text style={styles.cardPrice}>{item.price > 0 ? `$${item.price}/person` : "Free"}</Text>
@@ -219,7 +220,9 @@ export default function MapScreen() {
             <Text style={[styles.spotsText, { color: spotsLeftColor(item.spotsFilled ?? 0, item.maxPlayers) }]}>
               {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
             </Text>
-            <Text style={styles.spotsTotal}>{item.spotsFilled ?? 0}/{item.maxPlayers} filled</Text>
+            <View style={{ marginTop: 4 }}>
+              <SpotsBlobs filled={item.spotsFilled ?? 0} total={item.maxPlayers} size={16} max={10} />
+            </View>
           </View>
           <TouchableOpacity
             style={styles.joinBtn}
@@ -295,12 +298,8 @@ export default function MapScreen() {
       >
         {filtered.map(session => (
           <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
-            <View style={[
-              styles.pin,
-              { backgroundColor: TYPE_COLORS[session.type] ?? "#7D7A73" },
-              selectedId === session.id && styles.pinSelected,
-            ]}>
-              <Text style={styles.pinText}>{TYPE_ICONS[session.type] ?? "🏐"}</Text>
+            <View style={[styles.pin, selectedId === session.id && styles.pinSelected]}>
+              <CourtPin type={session.type} size={selectedId === session.id ? 30 : 24} />
             </View>
           </Marker>
         ))}
@@ -368,7 +367,7 @@ export default function MapScreen() {
               {(["all", "indoor", "grass", "beach"] as CourtFilter[]).map(c => {
                 const isActive = courtFilter === c;
                 const label = c === "all" ? "All Courts" :
-                  `${TYPE_ICONS[c]} ${c.charAt(0).toUpperCase() + c.slice(1)}`;
+                  `${c.charAt(0).toUpperCase() + c.slice(1)}`;
                 return (
                   <TouchableOpacity
                     key={c}
@@ -453,12 +452,13 @@ const styles = StyleSheet.create({
   aiBannerText: { flex: 1, color: "#FFF", fontSize: 13, fontWeight: "600" },
   aiBannerClear: { color: "#A8A49C", fontSize: 12, fontWeight: "700" },
   pin: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 38, height: 38, borderRadius: 19,
     justifyContent: "center", alignItems: "center",
+    backgroundColor: "#FFF", borderWidth: 2, borderColor: "#111111",
     shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  pinSelected: { width: 46, height: 46, borderRadius: 23, borderWidth: 3, borderColor: "#FFF", backgroundColor: "#D0341A" },
+  pinSelected: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: "#D0341A" },
   pinText: { fontSize: 16 },
 
   filterBar: {
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   },
   cardSelected: { borderColor: "#000" },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
+  typeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   typeBadgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
   cardPrice: { fontSize: 14, fontWeight: "700", color: "#000" },
   cardTitle: { fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8 },
