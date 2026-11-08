@@ -22,7 +22,7 @@ const POSE_WINDOWS: [number, number][] = [[0, 0.45], [0.45, 0.8], [0.8, 1.01]];
 // scale it up to keep the ball the same size on screen.
 const CANVAS_SCALE = 555 / 489;
 // Nudge right so the logo reads as centered on screen
-const SHIFT_RIGHT = 0.07;
+const SHIFT_RIGHT = 0.1;
 
 // t runs 0 -> 1; these turn it into a jump arc (x moves steadily, y rises then falls)
 const ARC_T = [0, 0.25, 0.5, 0.75, 1];
@@ -59,7 +59,7 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
       // fox leaps in from the left and lands on the ball
       Animated.parallel([
         Animated.timing(foxOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(leap, { toValue: 1, duration: 950, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(leap, { toValue: 1, duration: 1150, easing: Easing.linear, useNativeDriver: true }),
       ]),
       // little "landed" bounce of the whole logo
       Animated.sequence([
@@ -75,7 +75,9 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const foxX = leap.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.9, 0] });
+  // start with the fox half on screen at the left edge, so the whole jump is visible
+  const startX = -((width - size) / 2 + size * SHIFT_RIGHT) - size * 0.3;
+  const foxX = leap.interpolate({ inputRange: [0, 1], outputRange: [startX, 0] });
   const foxY = leap.interpolate({ inputRange: ARC_T, outputRange: ARC_Y.map(v => v * size * 0.9) });
   const foxRotate = leap.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["-22deg", "0deg", "10deg"] });
   const ballScaleX = ballSquash.interpolate({ inputRange: [0.82, 1], outputRange: [1.12, 1] });
