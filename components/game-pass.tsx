@@ -8,7 +8,7 @@ import { F } from "../constants/fonts";
 // Ticket-style pass for a game the player has joined.
 
 const LOGO = require("../assets/images/logo-mark.png");
-const BACKDROP = "#1C1B19";
+const BACKDROP = "#F5F3EF";
 const RED = "#D0341A", INK = "#111111", CANVAS = "#F5F3EF", LINE = "#ECE9E3", MUTED = "#7D7A73";
 
 // Deterministic "barcode" so each game's pass looks unique
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   barcode: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 14 },
   hint: { fontFamily: F.w400, fontSize: 12, color: MUTED, marginTop: 8 },
   backdrop: { flex: 1, backgroundColor: BACKDROP, justifyContent: "center", padding: 22 },
-  youreIn: { fontFamily: F.w900, color: "#FFF", fontSize: 29, textAlign: "center", marginBottom: 14 },
-  doneBtn: { backgroundColor: "#FFF", borderRadius: 14, paddingVertical: 14, alignItems: "center", marginTop: 4 },
-  doneText: { fontFamily: F.w800, fontSize: 18, color: INK },
+  youreIn: { fontFamily: F.w900, color: "#111111", fontSize: 29, textAlign: "center", marginBottom: 14 },
+  doneBtn: { backgroundColor: "#111111", borderRadius: 14, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+  doneText: { fontFamily: F.w800, fontSize: 18, color: "#FFF" },
 });
