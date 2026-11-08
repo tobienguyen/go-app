@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, Image, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, Modal, TouchableOpacity, useWindowDimensions } from "react-native";
+import { FoxHop } from "./fox-anim";
 import { Session } from "../types";
 import { CourtScene } from "./brand-art";
 import { F } from "../constants/fonts";
@@ -93,11 +94,13 @@ export function GamePassModal({ visible, session, playerName, uid, onClose }: {
   uid: string;
   onClose: () => void;
 }) {
+  const { width } = useWindowDimensions();
   if (!session) return null;
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Text style={styles.youreIn}>You're in!</Text>
+        <FoxHop play={visible} width={width - 44} />
         <GamePass session={session} playerName={playerName} uid={uid} notchColor={BACKDROP} />
         <TouchableOpacity style={styles.doneBtn} onPress={onClose}>
           <Text style={styles.doneText}>Done</Text>

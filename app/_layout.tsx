@@ -8,12 +8,14 @@ import { ensureMyProfile } from "../services/users";
 import 'react-native-reanimated';
 import { useFonts, Gaegu_400Regular, Gaegu_700Bold } from '@expo-google-fonts/gaegu';
 
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View } from 'react-native';
+import { FoxIntro } from '../components/fox-anim';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);
   const [fontsLoaded] = useFonts({ Gaegu_400Regular, Gaegu_700Bold });
   const segments = useSegments();
   const router = useRouter();
@@ -66,6 +68,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <View style={{ flex: 1 }}>
       <Stack>
         <Stack.Screen 
           name="(tabs)" 
@@ -97,6 +100,8 @@ export default function RootLayout() {
           options={{ presentation: 'modal', title: 'Details' }}
         />
       </Stack>
+      {showIntro && <FoxIntro onDone={() => setShowIntro(false)} />}
+      </View>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
