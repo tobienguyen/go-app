@@ -68,7 +68,7 @@ export default function SignupDetails() {
         <Text style={styles.label}>Full Name</Text>
         <TextInput
           style={styles.input}
-          placeholder="John Doe"
+          placeholder="Jane Doe"
           placeholderTextColor="#9CA3AF"
           value={name}
           onChangeText={setName}
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   skillContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 5, gap: 8 },
   skillBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10,
+    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10,
     borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
   },
   skillBtnActive: { backgroundColor: "#000", borderColor: "#000" },

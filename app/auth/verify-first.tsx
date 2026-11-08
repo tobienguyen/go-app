@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  Alert, ActivityIndicator, TextInput,
+  Alert, ActivityIndicator, TextInput, TouchableWithoutFeedback, Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, reload, signOut } from "firebase/auth";
@@ -23,33 +23,46 @@ export default function VerifyFirstScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const router = useRouter();
 
-  const [sending, setSending]   = useState(false);
-  const [sent, setSent]         = useState(false);
-  const [code, setCode]         = useState(["", "", "", "", "", ""]);
-  const [verifying, setVerifying] = useState(false);
-  const [resending, setResending] = useState(false);
+  // "sending" = creating account + sending Twilio code on mount
+  const [sending, setSending]       = useState(true);
+  const [sent, setSent]             = useState(false);
+  const [sendError, setSendError]   = useState("");
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [code, setCode]             = useState(["", "", "", "", "", ""]);
+  const [verifying, setVerifying]   = useState(false);
+  const [resending, setResending]   = useState(false);
 
   const inputs = useRef<(TextInput | null)[]>([]);
 
-  // ── Step 1: create temp account + send code ──────────────────────────────
-  const handleSendCode = async () => {
+  // ── Auto-start on mount ──────────────────────────────────────────────────
+  useEffect(() => {
+    startFlow();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startFlow = async () => {
     setSending(true);
+    setSendError("");
     try {
-      await createUserWithEmailAndPassword(auth, email, tempPassword());
+      if (!accountCreated) {
+        await createUserWithEmailAndPassword(auth, email, tempPassword());
+        setAccountCreated(true);
+      }
       await sendCodeFn()({ email });
       setSent(true);
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
+        // Existing account — skip 2FA and go straight to login
         router.replace({ pathname: "/auth/login", params: { email } } as any);
-      } else {
-        Alert.alert("Error", "Could not send verification code. Check your connection.");
+        return;
       }
+      setSendError("Could not send verification code. Check your connection.");
     } finally {
       setSending(false);
     }
   };
 
-  // ── Step 2: verify the 6-digit code ─────────────────────────────────────
+  // ── Verify the 6-digit code ──────────────────────────────────────────────
   const handleVerify = async () => {
     const fullCode = code.join("");
     if (fullCode.length < 6) {
@@ -60,7 +73,8 @@ export default function VerifyFirstScreen() {
     setVerifying(true);
     try {
       await verifyCodeFn()({ email, code: fullCode });
-      // Reload so auth.currentUser.emailVerified is now true
+      // Cloud function sets emailVerified = true via Admin SDK; force-refresh to pick it up
+      await auth.currentUser!.getIdToken(true);
       await reload(auth.currentUser!);
       router.replace("/auth/signup-details" as any);
     } catch (error: any) {
@@ -95,9 +109,18 @@ export default function VerifyFirstScreen() {
     router.replace("/auth" as any);
   };
 
-  // ── Code input helpers ───────────────────────────────────────────────────
   const onDigitChange = (text: string, index: number) => {
-    const digit = text.replace(/[^0-9]/g, "").slice(-1);
+    const digits = text.replace(/[^0-9]/g, "");
+    if (digits.length > 1) {
+      const next = [...code];
+      for (let i = 0; i < digits.length && index + i < 6; i++) {
+        next[index + i] = digits[i];
+      }
+      setCode(next);
+      inputs.current[Math.min(index + digits.length - 1, 5)]?.focus();
+      return;
+    }
+    const digit = digits.slice(-1);
     const next = [...code];
     next[index] = digit;
     setCode(next);
@@ -110,32 +133,31 @@ export default function VerifyFirstScreen() {
     }
   };
 
-  // ── Step 1 UI ─────────────────────────────────────────────────────────────
-  if (!sent) {
+  // ── Sending / error state ─────────────────────────────────────────────────
+  if (sending) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#000" />
+          <Text style={styles.sendingText}>Sending code to</Text>
+          <Text style={styles.email}>{email}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (sendError) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.iconCircle}>
-            <Ionicons name="shield-checkmark-outline" size={48} color="#000" />
+            <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           </View>
-          <Text style={styles.title}>Verify your email first</Text>
-          <Text style={styles.subtitle}>{"We'll send a 6-digit code to"}</Text>
-          <Text style={styles.email}>{email}</Text>
-          <Text style={styles.instruction}>
-            Enter the code in this app to confirm it{"'"}s really you.
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.primaryBtn, sending && { opacity: 0.6 }]}
-            onPress={handleSendCode}
-            disabled={sending}
-          >
-            {sending
-              ? <ActivityIndicator color="#FFF" />
-              : <Text style={styles.primaryBtnText}>Send Code</Text>
-            }
+          <Text style={styles.title}>Something went wrong</Text>
+          <Text style={styles.subtitle}>{sendError}</Text>
+          <TouchableOpacity style={styles.primaryBtn} onPress={startFlow}>
+            <Text style={styles.primaryBtnText}>Try Again</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.cancelLink} onPress={() => router.back()}>
             <Text style={styles.cancelText}>Use a different email</Text>
           </TouchableOpacity>
@@ -144,9 +166,10 @@ export default function VerifyFirstScreen() {
     );
   }
 
-  // ── Step 2 UI ─────────────────────────────────────────────────────────────
+  // ── Code entry ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.content}>
         <View style={styles.iconCircle}>
           <Ionicons name="mail-open-outline" size={48} color="#000" />
@@ -155,7 +178,6 @@ export default function VerifyFirstScreen() {
         <Text style={styles.subtitle}>We sent a 6-digit code to</Text>
         <Text style={styles.email}>{email}</Text>
 
-        {/* 6-digit code boxes */}
         <View style={styles.codeRow}>
           {code.map((digit, i) => (
             <TextInput
@@ -173,9 +195,9 @@ export default function VerifyFirstScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, verifying && { opacity: 0.6 }]}
+          style={[styles.primaryBtn, (verifying || code.join("").length < 6) && { opacity: 0.5 }]}
           onPress={handleVerify}
-          disabled={verifying}
+          disabled={verifying || code.join("").length < 6}
         >
           {verifying
             ? <ActivityIndicator color="#FFF" />
@@ -198,6 +220,7 @@ export default function VerifyFirstScreen() {
           <Text style={styles.cancelText}>Use a different email</Text>
         </TouchableOpacity>
       </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -217,10 +240,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "800", color: "#000", marginBottom: 10, textAlign: "center" },
   subtitle: { fontSize: 15, color: "#6B7280", textAlign: "center" },
   email: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 16, textAlign: "center" },
-  instruction: {
-    fontSize: 14, color: "#9CA3AF", textAlign: "center",
-    lineHeight: 20, marginBottom: 36,
-  },
+  sendingText: { fontSize: 16, color: "#6B7280", marginTop: 20, textAlign: "center" },
   codeRow: {
     flexDirection: "row", gap: 10, marginBottom: 36, marginTop: 8,
   },

@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -32,7 +31,6 @@ const GOOGLE_WEB_CLIENT_ID = "760211922089-c3nmfede113rlfssmm6rj9jeagvgj0o8.apps
 
 export default function GatekeeperScreen() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const router = useRouter();
@@ -71,37 +69,17 @@ export default function GatekeeperScreen() {
   };
 
   // ── Email Continue ──────────────────────────────────────────────────────
-  const handleContinue = async () => {
-    if (!email.includes("@")) {
+  const handleContinue = () => {
+    const trimmed = email.trim();
+    if (!trimmed.includes("@") || !trimmed.includes(".")) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
-
-    setLoading(true);
-    try {
-      // Probe whether an account exists by attempting a sign-in with a dummy password.
-      // firebase/auth no longer reliably returns sign-in methods, so this is the
-      // only way to distinguish "account exists" from "new user" without a backend.
-      await signInWithEmailAndPassword(auth, email, "____probe____");
-    } catch (error: any) {
-      if (
-        error.code === "auth/wrong-password" ||
-        error.code === "auth/invalid-credential"
-      ) {
-        // Account exists — send to login
-        router.push({ pathname: "/auth/login", params: { email } } as any);
-      } else if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/invalid-email"
-      ) {
-        // No account — start verification flow
-        router.push({ pathname: "/auth/verify-first", params: { email } } as any);
-      } else {
-        Alert.alert("Connection Error", "Check your internet connection and try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // Firebase's email enumeration protection (on by default) makes the probe
+    // sign-in unreliable — it returns auth/invalid-credential for both wrong
+    // passwords AND non-existent accounts. Route everyone to verify-first;
+    // it handles auth/email-already-in-use by redirecting to login directly.
+    router.push({ pathname: "/auth/verify-first", params: { email: trimmed } } as any);
   };
 
   return (
@@ -127,12 +105,8 @@ export default function GatekeeperScreen() {
           keyboardType="email-address"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>CONTINUE</Text>
-          )}
+        <TouchableOpacity style={styles.button} onPress={handleContinue}>
+          <Text style={styles.buttonText}>CONTINUE</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>

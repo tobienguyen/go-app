@@ -30,8 +30,7 @@ export default function RootLayout() {
     if (initializing) return;
 
     const inAuthGroup = (segments as any)[0] === 'auth';
-    const onVerifyScreen = (segments as any)[1] === 'verify-email';
-    const onVerifyFirst = (segments as any)[1] === 'verify-first';
+    const onVerifyFirst   = (segments as any)[1] === 'verify-first';
     const onSignupDetails = (segments as any)[1] === 'signup-details';
 
     // Social sign-in users (Google/Apple) don't go through signup-details —
@@ -41,23 +40,21 @@ export default function RootLayout() {
     ) ?? false;
 
     if (!user && !inAuthGroup) {
-      // Not logged in — send to gatekeeper
       router.replace('/auth' as any);
-    } else if (user && !user.emailVerified && !onVerifyScreen && !onVerifyFirst) {
-      // Logged in but email not verified — hold at verify screen
-      router.replace('/auth/verify-email' as any);
     } else if (
-      user && user.emailVerified && !user.displayName &&
-      !isSocialUser && !onSignupDetails
+      user && !user.emailVerified && !onVerifyFirst && !onSignupDetails
     ) {
-      // Email user verified but hasn't set up profile yet
+      // emailVerified=false means they're mid-Twilio-flow — keep them in place
+    } else if (
+      user && user.emailVerified &&
+      !user.displayName && !isSocialUser && !onSignupDetails
+    ) {
       router.replace('/auth/signup-details' as any);
     } else if (
       user && user.emailVerified &&
       (user.displayName || isSocialUser) &&
       inAuthGroup
     ) {
-      // Fully set up and stuck on auth screens — let into the app
       router.replace('/(tabs)' as any);
     }
   }, [user, segments, initializing, router]);
@@ -89,6 +86,11 @@ export default function RootLayout() {
         {/* Session detail screen */}
         <Stack.Screen
           name="session/[id]"
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="user/[id]"
           options={{ headerShown: false }}
         />
 

@@ -59,9 +59,12 @@ export async function uploadMediaItem(
   localUri: string,
   index: number,
 ): Promise<string> {
+  const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(localUri) || localUri.includes("video");
+  const ext = isVideo ? "mp4" : "jpg";
+  const contentType = isVideo ? "video/mp4" : "image/jpeg";
   const blob = await uriToBlob(localUri);
-  const storageRef = ref(storage, `users/${uid}/media/${Date.now()}_${index}.jpg`);
-  await uploadBytes(storageRef, blob, { contentType: "image/jpeg" });
+  const storageRef = ref(storage, `users/${uid}/media/${Date.now()}_${index}.${ext}`);
+  await uploadBytes(storageRef, blob, { contentType });
   return getDownloadURL(storageRef);
 }
 

@@ -253,12 +253,22 @@ export default function HomeScreen() {
       <View style={styles.postCard}>
         {/* Header */}
         <View style={styles.postHeader}>
-          <View style={[styles.avatar, { backgroundColor: color }]}>
-            <Text style={styles.avatarText}>{item.authorInitials}</Text>
-          </View>
+          <TouchableOpacity
+            onPress={() => item.authorId !== uid && router.push(`/user/${item.authorId}` as any)}
+            activeOpacity={item.authorId !== uid ? 0.7 : 1}
+          >
+            <View style={[styles.avatar, { backgroundColor: color }]}>
+              <Text style={styles.avatarText}>{item.authorInitials}</Text>
+            </View>
+          </TouchableOpacity>
           <View style={styles.postMeta}>
             <View style={styles.nameRow}>
-              <Text style={styles.posterName}>{item.authorName}</Text>
+              <TouchableOpacity
+                onPress={() => item.authorId !== uid && router.push(`/user/${item.authorId}` as any)}
+                activeOpacity={item.authorId !== uid ? 0.7 : 1}
+              >
+                <Text style={styles.posterName}>{item.authorName}</Text>
+              </TouchableOpacity>
               {item.authorPosition ? (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{item.authorPosition}</Text>
