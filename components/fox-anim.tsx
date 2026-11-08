@@ -22,7 +22,7 @@ const POSE_WINDOWS: [number, number][] = [[0, 0.45], [0.45, 0.8], [0.8, 1.01]];
 // scale it up to keep the ball the same size on screen.
 const CANVAS_SCALE = 555 / 489;
 // Nudge right so the logo reads as centered on screen
-const SHIFT_RIGHT = 0.1;
+const SHIFT_RIGHT = 0.05;
 
 // t runs 0 -> 1; these turn it into a jump arc (x moves steadily, y rises then falls)
 const ARC_T = [0, 0.25, 0.5, 0.75, 1];
