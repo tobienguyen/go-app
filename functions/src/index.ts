@@ -7,6 +7,8 @@
 // The old Twilio Verify functions are archived in archive/twilio-verify/.
 
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { defineSecret } from "firebase-functions/params";
 import { Pool, PoolClient } from "pg";
 import {
@@ -14,6 +16,8 @@ import {
   POST_COLUMNS, POST_FROM, toPost,
 } from "./db";
 import { parseSearch, SearchFilters } from "./gemini";
+
+initializeApp();
 
 const TIGER_DATABASE_URL = defineSecret("TIGER_DATABASE_URL");
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
@@ -425,3 +429,20 @@ export const api = onCall(
     }
   },
 );
+
+// Lets the email screen send returning users straight to login. The app itself
+// can't ask (Firebase's email enumeration protection), but the Admin SDK can.
+// Note: this does reveal whether an email has a GO! account.
+export const checkEmail = onCall({ timeoutSeconds: 10, memory: "128MiB" }, async (request) => {
+  const email = typeof request.data?.email === "string" ? request.data.email.trim().toLowerCase() : "";
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw new HttpsError("invalid-argument", "Invalid email.");
+  }
+  try {
+    await getAuth().getUserByEmail(email);
+    return { exists: true };
+  } catch (e: any) {
+    if (e?.code === "auth/user-not-found") return { exists: false };
+    throw new HttpsError("internal", "Could not check email.");
+  }
+});

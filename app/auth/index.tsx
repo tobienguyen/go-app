@@ -16,7 +16,8 @@ import { FontAwesome } from "@expo/vector-icons";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { auth } from "../../config/firebaseConfig";
+import { auth, functions } from "../../config/firebaseConfig";
+import { httpsCallable } from "firebase/functions";
 import { handleGoogleSignIn, handleAppleSignIn } from "../../utils/socialAuth";
 import { F } from "../../constants/fonts";
 
@@ -30,6 +31,7 @@ export default function GatekeeperScreen() {
   const [email, setEmail] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const router = useRouter();
 
   // Google OAuth
@@ -66,17 +68,27 @@ export default function GatekeeperScreen() {
   };
 
   // Email Continue
-  const handleContinue = () => {
-    const trimmed = email.trim();
+  const handleContinue = async () => {
+    const trimmed = email.trim().toLowerCase();
     if (!trimmed.includes("@") || !trimmed.includes(".")) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
 
-    // Firebase's email enumeration protection hides whether an account
-    // exists, so we don't guess here. The signup form tries to create the
-    // account and sends returning users to login if the email is taken.
-    router.push({ pathname: "/auth/signup-details", params: { email: trimmed.toLowerCase() } } as any);
+    // Returning users go straight to login; new users go to the signup form.
+    // If the check fails (offline, etc.), fall back to the signup form, which
+    // still redirects to login if the email turns out to be taken.
+    setChecking(true);
+    let exists = false;
+    try {
+      const res = await httpsCallable(functions, "checkEmail")({ email: trimmed });
+      exists = !!(res.data as any)?.exists;
+    } catch {}
+    setChecking(false);
+    router.push({
+      pathname: exists ? "/auth/login" : "/auth/signup-details",
+      params: { email: trimmed },
+    } as any);
   };
 
   return (
@@ -102,8 +114,10 @@ export default function GatekeeperScreen() {
           keyboardType="email-address"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>CONTINUE</Text>
+        <TouchableOpacity style={[styles.button, checking && { opacity: 0.6 }]} onPress={handleContinue} disabled={checking}>
+          {checking
+            ? <ActivityIndicator color="#FFF" />
+            : <Text style={styles.buttonText}>CONTINUE</Text>}
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
