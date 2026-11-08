@@ -85,12 +85,12 @@ export function CourtPulseCard({ courtName, color, refreshKey = 0 }: {
       </View>
 
       <View style={styles.statsRow}>
-        <Ionicons name="pulse" size={14} color="#6B7280" />
+        <Ionicons name="pulse" size={14} color="#7D7A73" />
         <Text style={styles.stat}>
           <Text style={styles.bold}>{pulse.thisWeek}</Text> joins & check-ins this week
         </Text>
         {change !== null && (
-          <Text style={[styles.change, { color: change >= 0 ? "#10B981" : "#EF4444" }]}>
+          <Text style={[styles.change, { color: change >= 0 ? "#111111" : "#7D7A73" }]}>
             {change >= 0 ? "▲" : "▼"} {Math.abs(change)}%
           </Text>
         )}
@@ -103,17 +103,17 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, marginBottom: 14 },
   headerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   title: { fontSize: 15, fontWeight: "800", color: "#000" },
-  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#10B981", marginLeft: 4 },
-  liveText: { fontSize: 11, fontWeight: "700", color: "#10B981", textTransform: "uppercase" },
-  subtitle: { fontSize: 13, color: "#6B7280", marginTop: 4, marginBottom: 12 },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#D0341A", marginLeft: 4 },
+  liveText: { fontSize: 11, fontWeight: "700", color: "#D0341A", textTransform: "uppercase" },
+  subtitle: { fontSize: 13, color: "#7D7A73", marginTop: 4, marginBottom: 12 },
   bold: { fontWeight: "700", color: "#000" },
-  empty: { fontSize: 13, color: "#9CA3AF", marginTop: 6 },
+  empty: { fontSize: 13, color: "#A8A49C", marginTop: 6 },
   chart: { flexDirection: "row", alignItems: "flex-end", height: 72, gap: 3 },
   barSlot: { flex: 1, height: "100%", justifyContent: "flex-end" },
   bar: { width: "100%", borderRadius: 3 },
   axis: { flexDirection: "row", justifyContent: "space-between", marginTop: 4 },
-  axisLabel: { fontSize: 10, color: "#9CA3AF" },
+  axisLabel: { fontSize: 10, color: "#A8A49C" },
   statsRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 },
-  stat: { fontSize: 12, color: "#6B7280", flex: 1 },
+  stat: { fontSize: 12, color: "#7D7A73", flex: 1 },
   change: { fontSize: 12, fontWeight: "700" },
 });

@@ -10,10 +10,11 @@ import { useRouter } from "expo-router";
 import { Session } from "../../types";
 import { subscribeSessions } from "../../services/sessions";
 import { askGo } from "../../services/insights";
+import { Brand } from "../../constants/brand";
 
 const { height } = Dimensions.get("window");
 
-const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
+const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
 type SessionType = "beach" | "grass" | "indoor";
 type CourtFilter = "all" | SessionType;
@@ -34,9 +35,8 @@ const ASK_EXAMPLES = [
 
 function spotsLeftColor(filled: number, total: number) {
   const ratio = filled / total;
-  if (ratio >= 0.9) return "#EF4444";
-  if (ratio >= 0.6) return "#F59E0B";
-  return "#10B981";
+  if (ratio >= 0.9) return Brand.red;
+  return Brand.ink;
 }
 
 function getNextSevenDays(): Date[] {
@@ -179,7 +179,7 @@ export default function MapScreen() {
   const renderCard = ({ item }: { item: Session }) => {
     const isSelected = selectedId === item.id;
     const spotsLeft = item.maxPlayers - (item.spotsFilled ?? 0);
-    const typeColor = TYPE_COLORS[item.type] ?? "#6B7280";
+    const typeColor = TYPE_COLORS[item.type] ?? "#7D7A73";
     return (
       <TouchableOpacity
         style={[styles.card, isSelected && styles.cardSelected]}
@@ -197,21 +197,21 @@ export default function MapScreen() {
         <Text style={styles.cardTitle}>{item.title}</Text>
         {item.address ? (
           <View style={styles.cardRow}>
-            <Ionicons name="location-outline" size={13} color="#6B7280" />
+            <Ionicons name="location-outline" size={13} color="#7D7A73" />
             <Text style={styles.cardMeta}>
               {item.address}{item.distanceKm !== undefined ? ` · ${item.distanceKm} km` : ""}
             </Text>
           </View>
         ) : null}
         <View style={styles.cardRow}>
-          <Ionicons name="time-outline" size={13} color="#6B7280" />
+          <Ionicons name="time-outline" size={13} color="#7D7A73" />
           <Text style={styles.cardMeta}>
             {new Date(item.sessionDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
             {" · "}{item.timeRange ?? item.duration}
           </Text>
         </View>
         <View style={styles.cardRow}>
-          <Ionicons name="person-outline" size={13} color="#6B7280" />
+          <Ionicons name="person-outline" size={13} color="#7D7A73" />
           <Text style={styles.cardMeta}>Hosted by {item.hostName} · {item.skillLevel}</Text>
         </View>
         <View style={styles.cardBottom}>
@@ -247,11 +247,11 @@ export default function MapScreen() {
 
       {/* Ask GO!: natural-language search (Gemini) */}
       <View style={styles.askBar}>
-        <Ionicons name="sparkles" size={16} color="#6B7280" />
+        <Ionicons name="sparkles" size={16} color="#7D7A73" />
         <TextInput
           style={styles.askInput}
           placeholder="Ask GO! e.g. free beach games tonight"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#A8A49C"
           value={askText}
           onChangeText={setAskText}
           onSubmitEditing={() => runAsk(askText)}
@@ -263,7 +263,7 @@ export default function MapScreen() {
           <ActivityIndicator size="small" color="#000" />
         ) : aiResult || askText ? (
           <TouchableOpacity onPress={clearAsk} hitSlop={10}>
-            <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+            <Ionicons name="close-circle" size={18} color="#A8A49C" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -297,7 +297,7 @@ export default function MapScreen() {
           <Marker key={session.id} coordinate={session.coordinate} onPress={() => handleMarkerPress(session)}>
             <View style={[
               styles.pin,
-              { backgroundColor: TYPE_COLORS[session.type] ?? "#6B7280" },
+              { backgroundColor: TYPE_COLORS[session.type] ?? "#7D7A73" },
               selectedId === session.id && styles.pinSelected,
             ]}>
               <Text style={styles.pinText}>{TYPE_ICONS[session.type] ?? "🏐"}</Text>
@@ -318,7 +318,7 @@ export default function MapScreen() {
             <Ionicons
               name={dayDropdownOpen ? "chevron-up" : "chevron-down"}
               size={13}
-              color={dayFilter ? "#FFF" : "#374151"}
+              color={dayFilter ? "#FFF" : "#3A3833"}
             />
           </TouchableOpacity>
           {dayDropdownOpen && (
@@ -360,7 +360,7 @@ export default function MapScreen() {
             <Ionicons
               name={courtDropdownOpen ? "chevron-up" : "chevron-down"}
               size={13}
-              color={courtFilter !== "all" ? "#FFF" : "#374151"}
+              color={courtFilter !== "all" ? "#FFF" : "#3A3833"}
             />
           </TouchableOpacity>
           {courtDropdownOpen && (
@@ -423,11 +423,11 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   headerTitle: { fontSize: 20, fontWeight: "800", color: "#000" },
   addBtn: {
@@ -439,32 +439,32 @@ const styles = StyleSheet.create({
   askBar: {
     flexDirection: "row", alignItems: "center", gap: 8,
     marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
-    backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
   },
   askInput: { flex: 1, paddingVertical: 10, fontSize: 14, color: "#000" },
   askExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
-  askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: 10, paddingVertical: 6 },
-  askChipText: { fontSize: 12, color: "#374151" },
+  askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 10, paddingVertical: 6 },
+  askChipText: { fontSize: 12, color: "#3A3833" },
   aiBanner: {
     flexDirection: "row", alignItems: "center", gap: 10,
     marginHorizontal: 12, marginBottom: 8, padding: 10,
     backgroundColor: "#000", borderRadius: 10,
   },
   aiBannerText: { flex: 1, color: "#FFF", fontSize: 13, fontWeight: "600" },
-  aiBannerClear: { color: "#9CA3AF", fontSize: 12, fontWeight: "700" },
+  aiBannerClear: { color: "#A8A49C", fontSize: 12, fontWeight: "700" },
   pin: {
     width: 36, height: 36, borderRadius: 18,
     justifyContent: "center", alignItems: "center",
     shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  pinSelected: { width: 46, height: 46, borderRadius: 23, borderWidth: 3, borderColor: "#000" },
+  pinSelected: { width: 46, height: 46, borderRadius: 23, borderWidth: 3, borderColor: "#FFF", backgroundColor: "#D0341A" },
   pinText: { fontSize: 16 },
 
   filterBar: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 12, paddingVertical: 10,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
     gap: 8, zIndex: 10,
   },
   dropdownWrapper: {
@@ -473,28 +473,28 @@ const styles = StyleSheet.create({
   dropdownTrigger: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3",
     backgroundColor: "#FFF",
   },
   dropdownTriggerActive: { backgroundColor: "#000", borderColor: "#000" },
-  dropdownTriggerText: { fontSize: 13, fontWeight: "600", color: "#374151" },
+  dropdownTriggerText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
   dropdownTriggerTextActive: { color: "#FFF" },
   dropdownMenu: {
     position: "absolute", top: 38, left: 0,
     backgroundColor: "#FFF", borderRadius: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
     shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 }, elevation: 12,
     minWidth: 150, overflow: "hidden", zIndex: 100,
   },
   dropdownItem: {
     paddingHorizontal: 16, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
-  dropdownItemActive: { backgroundColor: "#F3F4F6" },
-  dropdownItemText: { fontSize: 14, fontWeight: "500", color: "#374151" },
+  dropdownItemActive: { backgroundColor: "#F5F3EF" },
+  dropdownItemText: { fontSize: 14, fontWeight: "500", color: "#3A3833" },
   dropdownItemTextActive: { fontWeight: "700", color: "#000" },
-  filterCount: { marginLeft: "auto", fontSize: 12, color: "#9CA3AF", fontWeight: "500" },
+  filterCount: { marginLeft: "auto", fontSize: 12, color: "#A8A49C", fontWeight: "500" },
 
   list: { padding: 12, gap: 10, paddingBottom: 30 },
   card: {
@@ -510,19 +510,19 @@ const styles = StyleSheet.create({
   cardPrice: { fontSize: 14, fontWeight: "700", color: "#000" },
   cardTitle: { fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
-  cardMeta: { fontSize: 13, color: "#6B7280", flex: 1 },
+  cardMeta: { fontSize: 13, color: "#7D7A73", flex: 1 },
   cardBottom: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6",
+    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
   spotsText: { fontSize: 13, fontWeight: "700" },
-  spotsTotal: { fontSize: 11, color: "#9CA3AF", marginTop: 2 },
+  spotsTotal: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
   joinBtn: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 9, borderRadius: 10 },
   joinBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
   emptyState: { alignItems: "center", paddingVertical: 60, paddingHorizontal: 20 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: "700", color: "#000", marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: "#9CA3AF", marginBottom: 20 },
+  emptySubtitle: { fontSize: 14, color: "#A8A49C", marginBottom: 20 },
   emptyBtn: { backgroundColor: "#000", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   emptyBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
 });

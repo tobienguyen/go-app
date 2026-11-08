@@ -102,7 +102,7 @@ export default function UserProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Text style={{ color: "#9CA3AF" }}>User not found.</Text>
+          <Text style={{ color: "#A8A49C" }}>User not found.</Text>
         </View>
       </SafeAreaView>
     );
@@ -219,12 +219,12 @@ export default function UserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   headerTitle: { fontSize: 17, fontWeight: "700", color: "#000" },
   backBtn: { padding: 4 },
@@ -241,34 +241,34 @@ const styles = StyleSheet.create({
   avatarInitials: { color: "#FFF", fontSize: 26, fontWeight: "800" },
   topInfo: { flex: 1, justifyContent: "center", gap: 3 },
   nameText: { fontSize: 18, fontWeight: "700", color: "#000" },
-  skillText: { fontSize: 13, color: "#6B7280", fontWeight: "600" },
-  posText: { fontSize: 12, color: "#9CA3AF" },
+  skillText: { fontSize: 13, color: "#7D7A73", fontWeight: "600" },
+  posText: { fontSize: 12, color: "#A8A49C" },
 
   statsRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#F9FAFB", borderRadius: 12, padding: 14,
+    backgroundColor: "#FAF9F6", borderRadius: 12, padding: 14,
     marginBottom: 14,
   },
   stat: { flex: 1, alignItems: "center" },
   statValue: { fontSize: 20, fontWeight: "800", color: "#000" },
-  statLabel: { fontSize: 11, color: "#9CA3AF", marginTop: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
+  statLabel: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  statDivider: { width: 1, height: 32, backgroundColor: "#ECE9E3" },
 
   followBtn: {
     backgroundColor: "#000", borderRadius: 12,
     paddingVertical: 14, alignItems: "center", marginBottom: 12,
   },
   followBtnActive: {
-    backgroundColor: "#F3F4F6", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#F5F3EF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
     paddingVertical: 14, alignItems: "center", marginBottom: 12,
   },
   followBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
-  followBtnTextActive: { color: "#374151", fontWeight: "700", fontSize: 15 },
+  followBtnTextActive: { color: "#3A3833", fontWeight: "700", fontSize: 15 },
 
-  descText: { fontSize: 14, color: "#6B7280", lineHeight: 20 },
+  descText: { fontSize: 14, color: "#7D7A73", lineHeight: 20 },
 
   videoTile: {
-    borderRadius: 10, backgroundColor: "#1F2937",
+    borderRadius: 10, backgroundColor: "#1F1E1B",
     justifyContent: "center", alignItems: "center",
   },
 });

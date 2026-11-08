@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 28, fontWeight: "700", color: "#000000", textAlign: "center", marginBottom: 8 },
   pageSubtitle: { fontSize: 16, color: "#666666", textAlign: "center", marginBottom: 30 },
   input: {
-    backgroundColor: "#F3F4F6", color: "#000", padding: 16,
+    backgroundColor: "#F5F3EF", color: "#000", padding: 16,
     borderRadius: 12, fontSize: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   button: {
     backgroundColor: "#000000", padding: 16, borderRadius: 12,
@@ -203,12 +203,12 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 15 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-  dividerText: { color: "#9CA3AF", paddingHorizontal: 10, fontSize: 14 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
+  dividerText: { color: "#A8A49C", paddingHorizontal: 10, fontSize: 14 },
   socialButtons: { marginTop: 10, gap: 12 },
   socialButton: {
     backgroundColor: "#FFFFFF", padding: 16, borderRadius: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },

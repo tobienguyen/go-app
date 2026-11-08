@@ -13,6 +13,7 @@ import type { Follow } from "../../services/follows";
 import * as ImagePicker from "expo-image-picker";
 import { MediaItem, UserProfile, Post } from "../../types";
 import { getUserPosts } from "../../services/posts";
+import { Brand } from "../../constants/brand";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_W   = SCREEN_W - 32;
@@ -35,7 +36,7 @@ function buildMediaRows(items: MediaItem[]): MediaItem[][] {
 const POSITIONS = ["Setter", "Libero", "Outside Hitter", "Middle Blocker", "Opposite", "Right Side", "DS"];
 const SKILL_LEVELS = ["Social", "Beginner", "Intermediate", "Mid-Intermediate", "Advanced", "Pro"];
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏐" };
-const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
+const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 
 
 const BLANK_PROFILE: UserProfile = {
@@ -294,7 +295,7 @@ export default function ProfileScreen() {
               value={draftName}
               onChangeText={setDraftName}
               placeholder="Your name"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#A8A49C"
             />
           ) : (
             <Text style={styles.nameText}>{displayName}</Text>
@@ -319,7 +320,7 @@ export default function ProfileScreen() {
               value={draftDescription}
               onChangeText={setDraftDesc}
               placeholder="Add a bio..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#A8A49C"
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -449,7 +450,7 @@ export default function ProfileScreen() {
                     style={[styles.mediaAddBtn, { width: PORT_W, height: PORT_H }]}
                     onPress={addMedia}
                   >
-                    <Ionicons name="add" size={28} color="#9CA3AF" />
+                    <Ionicons name="add" size={28} color="#A8A49C" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -523,7 +524,7 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}>Recent Sessions</Text>
             <View style={{ gap: 10 }}>
               {posts.map(post => {
-                const typeColor = TYPE_COLORS[post.sessionType ?? ""] ?? "#6B7280";
+                const typeColor = TYPE_COLORS[post.sessionType ?? ""] ?? "#7D7A73";
                 return (
                   <View key={post.id} style={styles.postCard}>
                     <View style={styles.postTop}>
@@ -541,13 +542,13 @@ export default function ProfileScreen() {
                     <Text style={styles.postTitle}>{post.content}</Text>
                     {post.sessionLocation ? (
                       <View style={styles.postRow}>
-                        <Ionicons name="location-outline" size={12} color="#9CA3AF" />
+                        <Ionicons name="location-outline" size={12} color="#A8A49C" />
                         <Text style={styles.postMeta}>{post.sessionLocation}</Text>
                       </View>
                     ) : null}
                     {(post.sessionTimeRange || post.sessionDuration) ? (
                       <View style={styles.postRow}>
-                        <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+                        <Ionicons name="time-outline" size={12} color="#A8A49C" />
                         <Text style={styles.postMeta}>
                           {post.sessionTimeRange ?? post.sessionDuration}
                         </Text>
@@ -561,7 +562,7 @@ export default function ProfileScreen() {
         )}
 
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={18} color="#EF4444" />
+          <Ionicons name="log-out-outline" size={18} color="#D0341A" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -572,25 +573,25 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   headerTitle: { fontSize: 20, fontWeight: "800", color: "#000" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
-  cancelBtn: { fontSize: 15, color: "#9CA3AF", fontWeight: "600" },
+  cancelBtn: { fontSize: 15, color: "#A8A49C", fontWeight: "600" },
   saveBtn: { backgroundColor: "#000", paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20 },
   saveBtnText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
-  editBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB" },
+  editBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3" },
   editBtnText: { fontSize: 14, fontWeight: "600", color: "#000" },
   scroll: { padding: 12, gap: 12, paddingBottom: 40 },
 
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16 },
   sectionTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 12 },
-  sectionHint: { fontSize: 12, color: "#9CA3AF", marginBottom: 10, marginTop: -6 },
-  emptyNote: { fontSize: 13, color: "#9CA3AF", fontStyle: "italic" },
+  sectionHint: { fontSize: 12, color: "#A8A49C", marginBottom: 10, marginTop: -6 },
+  emptyNote: { fontSize: 13, color: "#A8A49C", fontStyle: "italic" },
 
   avatarWrapper: { alignSelf: "center", position: "relative", marginBottom: 12 },
   avatarImage: { width: 88, height: 88, borderRadius: 44 },
@@ -606,15 +607,15 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: "#FFF",
   },
   nameText: { fontSize: 20, fontWeight: "700", color: "#000", textAlign: "center", marginBottom: 4 },
-  emailText: { fontSize: 13, color: "#9CA3AF", textAlign: "center", marginBottom: 8 },
+  emailText: { fontSize: 13, color: "#A8A49C", textAlign: "center", marginBottom: 8 },
   nameInput: {
     fontSize: 18, fontWeight: "700", color: "#000",
     borderBottomWidth: 2, borderBottomColor: "#000",
     paddingVertical: 4, textAlign: "center", marginBottom: 6,
   },
-  descriptionText: { fontSize: 14, color: "#6B7280", textAlign: "center", lineHeight: 20, marginTop: 4 },
+  descriptionText: { fontSize: 14, color: "#7D7A73", textAlign: "center", lineHeight: 20, marginTop: 4 },
   descriptionInput: {
-    marginTop: 8, backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    marginTop: 8, backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, padding: 12, fontSize: 14, color: "#000", minHeight: 72,
   },
 
@@ -624,30 +625,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#000", borderRadius: 14,
     paddingHorizontal: 18, paddingVertical: 12, alignSelf: "flex-start",
   },
-  pos1Rank: { fontSize: 11, fontWeight: "800", color: "#9CA3AF" },
+  pos1Rank: { fontSize: 11, fontWeight: "800", color: "#A8A49C" },
   pos1Label: { fontSize: 17, fontWeight: "800", color: "#FFF" },
   pos23Row: { flexDirection: "row", gap: 8 },
   pos23Chip: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    borderWidth: 1.5, borderColor: "#E5E7EB", borderRadius: 10,
+    borderWidth: 1.5, borderColor: "#ECE9E3", borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 8,
   },
-  pos23Rank: { fontSize: 10, fontWeight: "700", color: "#9CA3AF" },
-  pos23Label: { fontSize: 14, fontWeight: "600", color: "#374151" },
+  pos23Rank: { fontSize: 10, fontWeight: "700", color: "#A8A49C" },
+  pos23Label: { fontSize: 14, fontWeight: "600", color: "#3A3833" },
 
   // Chips (edit mode)
   chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     flexDirection: "row", alignItems: "center", gap: 4,
     paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3", backgroundColor: "#FAF9F6",
   },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
-  chipRank: { fontSize: 10, fontWeight: "800", color: "#9CA3AF" },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#374151" },
+  chipRank: { fontSize: 10, fontWeight: "800", color: "#A8A49C" },
+  chipText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
   chipTextActive: { color: "#FFF" },
 
-  skillLevelTag: { fontSize: 13, fontWeight: "600", color: "#6B7280", marginBottom: 12 },
+  skillLevelTag: { fontSize: 13, fontWeight: "600", color: "#7D7A73", marginBottom: 12 },
   mediaRemoveBadge: {
     position: "absolute", top: 4, right: 4,
     backgroundColor: "rgba(0,0,0,0.6)", width: 20, height: 20, borderRadius: 10,
@@ -655,11 +656,11 @@ const styles = StyleSheet.create({
   },
   mediaAddBtn: {
     borderRadius: 10,
-    borderWidth: 1.5, borderColor: "#E5E7EB", borderStyle: "dashed",
-    justifyContent: "center", alignItems: "center", backgroundColor: "#F9FAFB",
+    borderWidth: 1.5, borderColor: "#ECE9E3", borderStyle: "dashed",
+    justifyContent: "center", alignItems: "center", backgroundColor: "#FAF9F6",
   },
   videoTile: {
-    borderRadius: 10, backgroundColor: "#1F2937",
+    borderRadius: 10, backgroundColor: "#1F1E1B",
     justifyContent: "center", alignItems: "center",
   },
   videoBadge: {
@@ -671,31 +672,31 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
-    flex: 1, backgroundColor: "#F9FAFB", borderRadius: 12,
+    flex: 1, backgroundColor: "#FAF9F6", borderRadius: 12,
     padding: 14, alignItems: "center",
   },
   statValue: { fontSize: 24, fontWeight: "800", color: "#000", marginBottom: 4 },
-  statLabel: { fontSize: 11, color: "#9CA3AF", textAlign: "center", lineHeight: 15 },
+  statLabel: { fontSize: 11, color: "#A8A49C", textAlign: "center", lineHeight: 15 },
 
   postCard: {
-    backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: "#F3F4F6",
+    backgroundColor: "#FAF9F6", borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: "#F5F3EF",
   },
   postTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   postTypeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   postTypeBadgeText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
   postPrice: { fontSize: 12, fontWeight: "700", color: "#000" },
-  postFree: { fontSize: 12, fontWeight: "700", color: "#10B981" },
+  postFree: { fontSize: 12, fontWeight: "700", color: "#111111" },
   postTitle: { fontSize: 14, fontWeight: "700", color: "#000", marginBottom: 5 },
   postRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  postMeta: { fontSize: 12, color: "#9CA3AF", flex: 1 },
+  postMeta: { fontSize: 12, color: "#A8A49C", flex: 1 },
 
   signOutBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14, borderRadius: 12,
-    backgroundColor: "#FFF", borderWidth: 1, borderColor: "#FEE2E2",
+    backgroundColor: "#FFF", borderWidth: 1, borderColor: "#F6DDD7",
   },
-  signOutText: { color: "#EF4444", fontWeight: "700", fontSize: 15 },
+  signOutText: { color: "#D0341A", fontWeight: "700", fontSize: 15 },
 
   followStatsRow: {
     flexDirection: "row", alignItems: "center",
@@ -703,8 +704,8 @@ const styles = StyleSheet.create({
   },
   followStat: { flex: 1, alignItems: "center" },
   followStatValue: { fontSize: 20, fontWeight: "800", color: "#000" },
-  followStatLabel: { fontSize: 11, color: "#9CA3AF", marginTop: 2 },
-  followStatDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB", marginHorizontal: 8 },
+  followStatLabel: { fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  followStatDivider: { width: 1, height: 32, backgroundColor: "#ECE9E3", marginHorizontal: 8 },
   requestRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
   },
@@ -719,7 +720,7 @@ const styles = StyleSheet.create({
   },
   acceptBtnText: { color: "#FFF", fontWeight: "700", fontSize: 13 },
   declineBtn: {
-    borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
+    borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10,
   },
-  declineBtnText: { color: "#6B7280", fontWeight: "600", fontSize: 13 },
+  declineBtnText: { color: "#7D7A73", fontWeight: "600", fontSize: 13 },
 });

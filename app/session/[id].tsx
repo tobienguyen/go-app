@@ -10,8 +10,9 @@ import { auth } from "../../config/firebaseConfig";
 import { Session } from "../../types";
 import { getSession, joinSession, leaveSession } from "../../services/sessions";
 import { CourtPulseCard } from "../../components/court-pulse";
+import { Brand } from "../../constants/brand";
 
-const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
+const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏟️" };
 
 export default function SessionDetailScreen() {
@@ -70,16 +71,16 @@ export default function SessionDetailScreen() {
           <View style={{ width: 40 }} />
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ color: "#9CA3AF", fontSize: 16 }}>Session not found.</Text>
+          <Text style={{ color: "#A8A49C", fontSize: 16 }}>Session not found.</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const typeColor = TYPE_COLORS[session.type] ?? "#6B7280";
+  const typeColor = TYPE_COLORS[session.type] ?? "#7D7A73";
   const spotsLeft = session.maxPlayers - (session.spotsFilled ?? 0);
   const spotsRatio = (session.spotsFilled ?? 0) / session.maxPlayers;
-  const spotsColor = spotsRatio >= 0.9 ? "#EF4444" : spotsRatio >= 0.6 ? "#F59E0B" : "#10B981";
+  const spotsColor = spotsRatio >= 0.9 ? Brand.red : Brand.ink;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,7 +107,7 @@ export default function SessionDetailScreen() {
             pitchEnabled={false}
             rotateEnabled={false}
           >
-            <Marker coordinate={session.coordinate} pinColor={typeColor} />
+            <Marker coordinate={session.coordinate} pinColor={Brand.red} />
           </MapView>
           <View style={[styles.typeBadgeOverlay, { backgroundColor: typeColor }]}>
             <Text style={styles.typeBadgeText}>
@@ -118,7 +119,7 @@ export default function SessionDetailScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>{session.title}</Text>
           <View style={styles.hostRow}>
-            <Ionicons name="person-circle-outline" size={18} color="#9CA3AF" />
+            <Ionicons name="person-circle-outline" size={18} color="#A8A49C" />
             <Text style={styles.hostText}>Hosted by {session.hostName}</Text>
           </View>
 
@@ -211,7 +212,7 @@ export default function SessionDetailScreen() {
 function DetailRow({ icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <View style={styles.detailRow}>
-      <Ionicons name={icon} size={18} color="#6B7280" style={styles.detailIcon} />
+      <Ionicons name={icon} size={18} color="#7D7A73" style={styles.detailIcon} />
       <View>
         <Text style={styles.detailLabel}>{label}</Text>
         <Text style={styles.detailValue}>{value}</Text>
@@ -221,11 +222,11 @@ function DetailRow({ icon, label, value }: { icon: any; label: string; value: st
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 12, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: "800", color: "#000" },
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 14 },
   title: { fontSize: 24, fontWeight: "800", color: "#000", lineHeight: 30 },
   hostRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  hostText: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
+  hostText: { fontSize: 14, color: "#7D7A73", fontWeight: "500" },
   spotsCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
@@ -249,9 +250,9 @@ const styles = StyleSheet.create({
   },
   spotsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   spotsLeft: { fontSize: 16, fontWeight: "700" },
-  spotsFraction: { fontSize: 13, color: "#9CA3AF", fontWeight: "500" },
+  spotsFraction: { fontSize: 13, color: "#A8A49C", fontWeight: "500" },
   progressTrack: {
-    height: 8, backgroundColor: "#F3F4F6", borderRadius: 4, overflow: "hidden",
+    height: 8, backgroundColor: "#F5F3EF", borderRadius: 4, overflow: "hidden",
   },
   progressFill: { height: "100%", borderRadius: 4 },
   detailsCard: {
@@ -262,29 +263,29 @@ const styles = StyleSheet.create({
   },
   detailRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   detailIcon: { marginTop: 2 },
-  detailLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  detailValue: { fontSize: 15, color: "#111827", fontWeight: "600" },
+  detailLabel: { fontSize: 11, color: "#A8A49C", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  detailValue: { fontSize: 15, color: "#111111", fontWeight: "600" },
   descriptionCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   descriptionLabel: { fontSize: 13, fontWeight: "700", color: "#000", marginBottom: 8 },
-  descriptionText: { fontSize: 15, color: "#374151", lineHeight: 22 },
+  descriptionText: { fontSize: 15, color: "#3A3833", lineHeight: 22 },
   footer: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingVertical: 16,
-    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   footerPrice: {},
   footerPriceValue: { fontSize: 22, fontWeight: "800", color: "#000" },
-  footerPriceSub: { fontSize: 12, color: "#9CA3AF", fontWeight: "500" },
+  footerPriceSub: { fontSize: 12, color: "#A8A49C", fontWeight: "500" },
   joinBtn: {
     backgroundColor: "#000", paddingHorizontal: 32, paddingVertical: 14,
     borderRadius: 14,
   },
-  joinBtnFull: { backgroundColor: "#9CA3AF" },
-  joinBtnJoined: { backgroundColor: "#EF4444" },
+  joinBtnFull: { backgroundColor: "#A8A49C" },
+  joinBtnJoined: { backgroundColor: "#D0341A" },
   joinBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
 });

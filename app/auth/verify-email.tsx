@@ -114,15 +114,15 @@ const styles = StyleSheet.create({
   },
   iconCircle: {
     width: 96, height: 96, borderRadius: 48,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F3EF",
     justifyContent: "center", alignItems: "center",
     marginBottom: 28,
   },
   title: { fontSize: 26, fontWeight: "800", color: "#000", marginBottom: 10, textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#6B7280", textAlign: "center" },
+  subtitle: { fontSize: 15, color: "#7D7A73", textAlign: "center" },
   email: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 16, textAlign: "center" },
   instruction: {
-    fontSize: 14, color: "#9CA3AF", textAlign: "center",
+    fontSize: 14, color: "#A8A49C", textAlign: "center",
     lineHeight: 20, marginBottom: 36,
   },
   primaryBtn: {
@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
   secondaryBtn: {
     width: "100%", paddingVertical: 16,
-    borderRadius: 14, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 14, borderWidth: 1, borderColor: "#ECE9E3",
     alignItems: "center", marginBottom: 24,
   },
   secondaryBtnText: { color: "#000", fontWeight: "600", fontSize: 15 },
   signOutLink: { marginTop: 8 },
-  signOutText: { color: "#9CA3AF", fontSize: 14, fontWeight: "500" },
+  signOutText: { color: "#A8A49C", fontSize: 14, fontWeight: "500" },
 });

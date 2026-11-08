@@ -74,7 +74,7 @@ export default function SignupDetails() {
         <TextInput
           style={styles.input}
           placeholder="Jane Doe"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#A8A49C"
           value={name}
           onChangeText={setName}
         />
@@ -83,7 +83,7 @@ export default function SignupDetails() {
         <TextInput
           style={styles.input}
           placeholder="At least 6 characters"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#A8A49C"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -103,7 +103,7 @@ export default function SignupDetails() {
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={{ fontSize: 12, color: "#9CA3AF", marginTop: 8 }}>
+        <Text style={{ fontSize: 12, color: "#A8A49C", marginTop: 8 }}>
           You can change this anytime in your profile.
         </Text>
 
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
   form: { paddingHorizontal: 30 },
   label: { fontSize: 14, fontWeight: "600", color: "#000", marginBottom: 8, marginTop: 15 },
   input: {
-    backgroundColor: "#F3F4F6", padding: 16, borderRadius: 12,
-    fontSize: 16, borderWidth: 1, borderColor: "#E5E7EB", color: "#000",
+    backgroundColor: "#F5F3EF", padding: 16, borderRadius: 12,
+    fontSize: 16, borderWidth: 1, borderColor: "#ECE9E3", color: "#000",
   },
   skillContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 5, gap: 8 },
   skillBtn: {
     paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10,
-    borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
+    borderWidth: 1, borderColor: "#ECE9E3", alignItems: "center",
   },
   skillBtnActive: { backgroundColor: "#000", borderColor: "#000" },
   skillBtnText: { color: "#666", fontWeight: "600" },

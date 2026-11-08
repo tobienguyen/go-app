@@ -12,7 +12,7 @@ import { getLeaderboard, LeaderboardEntry } from '../../services/insights';
 // continuous aggregate in Tiger Cloud and resets every Monday.
 
 const MEDALS = ['🥇', '🥈', '🥉'];
-const AVATAR_COLORS = ['#FF6B35', '#6C63FF', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#EC4899'];
+const AVATAR_COLORS = ['#111111'];
 
 function avatarColor(uid: string): string {
   let hash = 0;
@@ -96,7 +96,7 @@ export default function LeaderboardScreen() {
           }
           ListHeaderComponent={
             <View style={styles.explainer}>
-              <Ionicons name="trophy" size={18} color="#F59E0B" />
+              <Ionicons name="trophy-outline" size={18} color="#111111" />
               <Text style={styles.explainerText}>
                 Ranked by games played this week. Resets every Monday, so get out there!
               </Text>
@@ -116,37 +116,37 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  container: { flex: 1, backgroundColor: '#F5F3EF' },
   header: {
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#ECE9E3',
   },
   headerTitle: { fontSize: 20, fontWeight: '800', color: '#000' },
-  headerSub: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  headerSub: { fontSize: 12, color: '#7D7A73', marginTop: 2 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 12, gap: 8, paddingBottom: 30 },
   explainer: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FEF3C7', borderRadius: 12, padding: 12, marginBottom: 4,
+    backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#ECE9E3', borderRadius: 12, padding: 12, marginBottom: 4,
   },
-  explainerText: { flex: 1, fontSize: 13, color: '#92400E', fontWeight: '500' },
+  explainerText: { flex: 1, fontSize: 13, color: '#3A3833', fontWeight: '500' },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#FFF', borderRadius: 14, padding: 12,
     borderWidth: 2, borderColor: 'transparent',
   },
   rowMe: { borderColor: '#000' },
-  rank: { width: 28, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#374151' },
+  rank: { width: 28, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#3A3833' },
   avatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
   nameCol: { flex: 1 },
   name: { fontSize: 15, fontWeight: '700', color: '#000' },
-  meta: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  meta: { fontSize: 12, color: '#7D7A73', marginTop: 2 },
   scoreCol: { alignItems: 'center', minWidth: 48 },
   score: { fontSize: 20, fontWeight: '800', color: '#000' },
-  scoreLabel: { fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', fontWeight: '600' },
+  scoreLabel: { fontSize: 10, color: '#A8A49C', textTransform: 'uppercase', fontWeight: '600' },
   empty: { alignItems: 'center', paddingVertical: 60 },
   emptyEmoji: { fontSize: 44, marginBottom: 10 },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#000', marginBottom: 4 },
-  emptySub: { fontSize: 14, color: '#9CA3AF' },
+  emptySub: { fontSize: 14, color: '#A8A49C' },
 });

@@ -11,9 +11,10 @@ import { useRouter } from "expo-router";
 import { auth, storage } from "../../config/firebaseConfig";
 import { getUser } from "../../services/users";
 import { subscribeFeed, createPost, toggleLike as toggleLikeApi } from "../../services/posts";
+import { Brand } from "../../constants/brand";
 
-const AVATAR_COLORS = ["#FF6B35", "#6C63FF", "#10B981", "#F59E0B", "#3B82F6", "#EF4444", "#8B5CF6", "#EC4899"];
-const TYPE_COLORS: Record<string, string> = { beach: "#F59E0B", grass: "#10B981", indoor: "#3B82F6" };
+const AVATAR_COLORS = ["#111111"];
+const TYPE_COLORS: Record<string, string> = { beach: Brand.ink, grass: Brand.ink, indoor: Brand.ink };
 const TYPE_ICONS: Record<string, string> = { beach: "🏖️", grass: "🌿", indoor: "🏟️" };
 
 function avatarColor(uid: string): string {
@@ -96,7 +97,7 @@ const ComposeBar = React.memo(function ComposeBar({
             value={draft}
             onChangeText={setDraft}
             placeholder="What's on your mind?"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#A8A49C"
             multiline
             autoFocus
           />
@@ -113,7 +114,7 @@ const ComposeBar = React.memo(function ComposeBar({
           )}
           <View style={styles.composeActions}>
             <TouchableOpacity onPress={pickImage} style={styles.imagePickerBtn}>
-              <Ionicons name="image-outline" size={22} color="#6B7280" />
+              <Ionicons name="image-outline" size={22} color="#7D7A73" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { setComposing(false); setDraft(""); setDraftImageUri(null); }}>
               <Text style={styles.cancelBtn}>Cancel</Text>
@@ -136,7 +137,7 @@ const ComposeBar = React.memo(function ComposeBar({
             <Text style={styles.createInputText}>Share something with the community...</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={pickImage} style={styles.inlineImageBtn}>
-            <Ionicons name="image-outline" size={22} color="#6B7280" />
+            <Ionicons name="image-outline" size={22} color="#7D7A73" />
           </TouchableOpacity>
         </View>
       )}
@@ -282,25 +283,25 @@ export default function HomeScreen() {
             <View style={styles.sessionBannerTop}>
               <View style={[
                 styles.sessionTypeBadge,
-                { backgroundColor: (TYPE_COLORS[item.sessionType ?? ""] ?? "#6B7280") + "20" }
+                { backgroundColor: (TYPE_COLORS[item.sessionType ?? ""] ?? "#7D7A73") + "20" }
               ]}>
-                <Text style={[styles.sessionTypeText, { color: TYPE_COLORS[item.sessionType ?? ""] ?? "#6B7280" }]}>
+                <Text style={[styles.sessionTypeText, { color: TYPE_COLORS[item.sessionType ?? ""] ?? "#7D7A73" }]}>
                   {TYPE_ICONS[item.sessionType ?? ""] ?? "🏐"} {(item.sessionType ?? "").toUpperCase()}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={16} color="#A8A49C" />
             </View>
             <Text style={styles.sessionBannerTitle}>{item.content}</Text>
             <View style={styles.sessionMeta}>
               {item.sessionLocation ? (
                 <View style={styles.sessionMetaRow}>
-                  <Ionicons name="location-outline" size={13} color="#6B7280" />
+                  <Ionicons name="location-outline" size={13} color="#7D7A73" />
                   <Text style={styles.sessionMetaText}>{item.sessionLocation}</Text>
                 </View>
               ) : null}
               {item.sessionPrice !== undefined && (
                 <View style={styles.sessionMetaRow}>
-                  <Ionicons name="cash-outline" size={13} color="#6B7280" />
+                  <Ionicons name="cash-outline" size={13} color="#7D7A73" />
                   <Text style={styles.sessionMetaText}>
                     {item.sessionPrice === 0 ? "Free" : `$${item.sessionPrice}/person`}
                     {item.sessionSkillLevel ? ` · ${item.sessionSkillLevel}` : ""}
@@ -329,18 +330,18 @@ export default function HomeScreen() {
             <Ionicons
               name={liked ? "heart" : "heart-outline"}
               size={20}
-              color={liked ? "#EF4444" : "#6B7280"}
+              color={liked ? "#D0341A" : "#7D7A73"}
             />
-            <Text style={[styles.actionText, liked && { color: "#EF4444" }]}>
+            <Text style={[styles.actionText, liked && { color: "#D0341A" }]}>
               {item.likes ?? 0}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
-            <Ionicons name="chatbubble-outline" size={19} color="#6B7280" />
+            <Ionicons name="chatbubble-outline" size={19} color="#7D7A73" />
             <Text style={styles.actionText}>{item.comments ?? 0}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
-            <Ionicons name="arrow-redo-outline" size={20} color="#6B7280" />
+            <Ionicons name="arrow-redo-outline" size={20} color="#7D7A73" />
             <Text style={styles.actionText}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -409,11 +410,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   headerLogo: { width: 44, height: 44 },
   headerIcons: { flexDirection: "row", gap: 8 },
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   createPostBar: {
     flexDirection: "row", alignItems: "flex-start",
     backgroundColor: "#FFF", padding: 16, marginBottom: 8,
-    gap: 12, borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    gap: 12, borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   createAvatar: {
     width: 42, height: 42, borderRadius: 21,
@@ -432,13 +433,13 @@ const styles = StyleSheet.create({
   composeRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
   createInput: {
     flex: 1, paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3",
   },
-  createInputText: { color: "#9CA3AF", fontSize: 14 },
+  createInputText: { color: "#A8A49C", fontSize: 14 },
   inlineImageBtn: { padding: 4 },
   composeInput: {
     paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
     fontSize: 15, color: "#000", minHeight: 60,
   },
   imagePreviewWrapper: { position: "relative", alignSelf: "flex-start" },
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
   },
   composeActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, alignItems: "center" },
   imagePickerBtn: { marginRight: "auto" },
-  cancelBtn: { fontSize: 14, color: "#9CA3AF", fontWeight: "600" },
+  cancelBtn: { fontSize: 14, color: "#A8A49C", fontWeight: "600" },
   postBtn: {
     backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 8,
     borderRadius: 20, minWidth: 64, alignItems: "center",
@@ -462,14 +463,14 @@ const styles = StyleSheet.create({
   postMeta: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   posterName: { fontSize: 15, fontWeight: "700", color: "#000" },
-  badge: { backgroundColor: "#F3F4F6", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  badgeText: { fontSize: 11, fontWeight: "600", color: "#6B7280" },
-  postTime: { fontSize: 12, color: "#9CA3AF", marginTop: 2 },
-  postContent: { fontSize: 15, color: "#111827", lineHeight: 22, marginBottom: 10 },
+  badge: { backgroundColor: "#F5F3EF", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  badgeText: { fontSize: 11, fontWeight: "600", color: "#7D7A73" },
+  postTime: { fontSize: 12, color: "#A8A49C", marginTop: 2 },
+  postContent: { fontSize: 15, color: "#111111", lineHeight: 22, marginBottom: 10 },
   postImage: { width: "100%", height: 220, borderRadius: 12, marginBottom: 12 },
   sessionBanner: {
-    backgroundColor: "#F9FAFB", borderRadius: 12, padding: 14,
-    marginBottom: 14, borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderRadius: 12, padding: 14,
+    marginBottom: 14, borderWidth: 1, borderColor: "#ECE9E3",
   },
   sessionBannerTop: {
     flexDirection: "row", alignItems: "center",
@@ -482,15 +483,15 @@ const styles = StyleSheet.create({
   sessionBannerTitle: { fontSize: 15, fontWeight: "700", color: "#000", marginBottom: 8 },
   sessionMeta: { gap: 4, marginBottom: 8 },
   sessionMetaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  sessionMetaText: { fontSize: 13, color: "#6B7280" },
-  sessionTapHint: { fontSize: 11, color: "#9CA3AF", fontWeight: "500" },
+  sessionMetaText: { fontSize: 13, color: "#7D7A73" },
+  sessionTapHint: { fontSize: 11, color: "#A8A49C", fontWeight: "500" },
   postActions: {
     flexDirection: "row", gap: 20,
-    paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6",
+    paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionText: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
+  actionText: { fontSize: 14, color: "#7D7A73", fontWeight: "500" },
   emptyState: { alignItems: "center", paddingVertical: 60 },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 15, color: "#9CA3AF", fontWeight: "500" },
+  emptyText: { fontSize: 15, color: "#A8A49C", fontWeight: "500" },
 });

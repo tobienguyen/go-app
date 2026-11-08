@@ -160,9 +160,9 @@ const styles = StyleSheet.create({
     marginBottom: 25, letterSpacing: 2, fontWeight: "600",
   },
   input: {
-    backgroundColor: "#F3F4F6", color: "#000", padding: 16,
+    backgroundColor: "#F5F3EF", color: "#000", padding: 16,
     borderRadius: 12, fontSize: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   button: {
     backgroundColor: "#000", padding: 18, borderRadius: 12,
@@ -170,12 +170,12 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 1 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-  dividerText: { color: "#9CA3AF", paddingHorizontal: 10, fontSize: 12, fontWeight: "700" },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
+  dividerText: { color: "#A8A49C", paddingHorizontal: 10, fontSize: 12, fontWeight: "700" },
   socialButtons: { gap: 12 },
   socialButton: {
     backgroundColor: "#FFF", padding: 16, borderRadius: 12,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: "#ECE9E3",
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },

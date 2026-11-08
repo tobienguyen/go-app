@@ -94,7 +94,7 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
         StyleSheet.absoluteFill,
         {
           top: ITEM_H * 2, bottom: ITEM_H * 2,
-          borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#D1D5DB",
+          borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#D9D5CD",
           height: ITEM_H, position: "absolute",
         },
       ]} />
@@ -117,7 +117,7 @@ function WheelPicker({ items, value, onChange, width = 72 }: {
             <Text style={{
               fontSize: i === activeIdx ? 22 : 18,
               fontWeight: i === activeIdx ? "700" : "400",
-              color: i === activeIdx ? "#000" : "#9CA3AF",
+              color: i === activeIdx ? "#000" : "#A8A49C",
             }}>
               {item}
             </Text>
@@ -355,7 +355,7 @@ export default function CreateSessionScreen() {
             </View>
             {address ? (
               <View style={styles.addressRow}>
-                <Ionicons name="location" size={14} color="#6B7280" />
+                <Ionicons name="location" size={14} color="#7D7A73" />
                 <Text style={styles.addressText}>{address}</Text>
               </View>
             ) : (
@@ -368,7 +368,7 @@ export default function CreateSessionScreen() {
               <Text style={styles.label}>Session Date</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setDateOpen(true)}>
                 <Text style={styles.dropdownBtnText}>{DATE_OPTIONS[dateIdx].label}</Text>
-                <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                <Ionicons name="chevron-down" size={16} color="#7D7A73" />
               </TouchableOpacity>
             </View>
 
@@ -386,19 +386,19 @@ export default function CreateSessionScreen() {
                   style={[styles.timeTrigger, startTime && styles.timeTriggerFilled]}
                   onPress={() => setTimePicker("start")}
                 >
-                  <Ionicons name="time-outline" size={15} color={startTime ? "#000" : "#9CA3AF"} />
+                  <Ionicons name="time-outline" size={15} color={startTime ? "#000" : "#A8A49C"} />
                   <Text style={[styles.timeTriggerText, startTime && styles.timeTriggerTextFilled]}>
                     {startTime ?? "Start time"}
                   </Text>
                 </TouchableOpacity>
 
-                <Ionicons name="arrow-forward" size={14} color="#9CA3AF" />
+                <Ionicons name="arrow-forward" size={14} color="#A8A49C" />
 
                 <TouchableOpacity
                   style={[styles.timeTrigger, endTime && styles.timeTriggerFilled]}
                   onPress={() => setTimePicker("end")}
                 >
-                  <Ionicons name="time-outline" size={15} color={endTime ? "#000" : "#9CA3AF"} />
+                  <Ionicons name="time-outline" size={15} color={endTime ? "#000" : "#A8A49C"} />
                   <Text style={[styles.timeTriggerText, endTime && styles.timeTriggerTextFilled]}>
                     {endTime ?? "End time"}
                   </Text>
@@ -414,7 +414,7 @@ export default function CreateSessionScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Sunset Beach 4v4"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#A8A49C"
                 value={title}
                 onChangeText={setTitle}
               />
@@ -427,7 +427,7 @@ export default function CreateSessionScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Any extra details — skill expectations, what to bring, parking..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#A8A49C"
                 value={description}
                 onChangeText={setDesc}
                 multiline
@@ -458,7 +458,7 @@ export default function CreateSessionScreen() {
               <Text style={styles.label}>Skill Level</Text>
               <TouchableOpacity style={styles.dropdownBtn} onPress={() => setSkillOpen(true)}>
                 <Text style={styles.dropdownBtnText}>{skillLevel}</Text>
-                <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                <Ionicons name="chevron-down" size={16} color="#7D7A73" />
               </TouchableOpacity>
             </View>
 
@@ -475,7 +475,7 @@ export default function CreateSessionScreen() {
                 value={maxPlayers}
                 onValueChange={v => setMax(Math.round(v))}
                 minimumTrackTintColor="#000"
-                maximumTrackTintColor="#E5E7EB"
+                maximumTrackTintColor="#ECE9E3"
                 thumbTintColor="#000"
               />
               <View style={styles.sliderTicks}>
@@ -492,7 +492,7 @@ export default function CreateSessionScreen() {
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="0 for free"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#A8A49C"
                   value={price}
                   onChangeText={setPrice}
                   keyboardType="decimal-pad"
@@ -552,11 +552,11 @@ export default function CreateSessionScreen() {
 
 // Styles
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  container: { flex: 1, backgroundColor: "#F5F3EF" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 12, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: "800", color: "#000" },
@@ -567,17 +567,17 @@ const styles = StyleSheet.create({
   map: { flex: 1 },
   mapOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#F3F4F6", justifyContent: "center", alignItems: "center", zIndex: 10,
+    backgroundColor: "#F5F3EF", justifyContent: "center", alignItems: "center", zIndex: 10,
   },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  addressText: { fontSize: 13, color: "#6B7280", flex: 1 },
-  addressHint: { fontSize: 13, color: "#9CA3AF", marginTop: 10, textAlign: "center" },
+  addressText: { fontSize: 13, color: "#7D7A73", flex: 1 },
+  addressHint: { fontSize: 13, color: "#A8A49C", marginTop: 10, textAlign: "center" },
   formSection: { backgroundColor: "#FFF", padding: 16 },
   field: { marginBottom: 22 },
   label: { fontSize: 14, fontWeight: "700", color: "#000", marginBottom: 10 },
-  labelOptional: { fontSize: 12, color: "#9CA3AF", fontWeight: "400" },
+  labelOptional: { fontSize: 12, color: "#A8A49C", fontWeight: "400" },
   input: {
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, padding: 14, fontSize: 15, color: "#000",
   },
   textArea: { minHeight: 80, paddingTop: 12 },
@@ -585,16 +585,16 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    borderRadius: 20, borderWidth: 1, borderColor: "#ECE9E3", backgroundColor: "#FAF9F6",
   },
   chipActive: { backgroundColor: "#000", borderColor: "#000" },
   chipIcon: { fontSize: 14 },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#374151" },
+  chipText: { fontSize: 13, fontWeight: "600", color: "#3A3833" },
   chipTextActive: { color: "#FFF" },
 
   dropdownBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14,
   },
   dropdownBtnText: { fontSize: 15, fontWeight: "600", color: "#000" },
@@ -605,29 +605,29 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   timeTrigger: {
     flex: 1, flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: "#FAF9F6", borderWidth: 1, borderColor: "#ECE9E3",
     borderRadius: 12, paddingHorizontal: 12, paddingVertical: 13,
   },
   timeTriggerFilled: { borderColor: "#000", backgroundColor: "#FFF" },
-  timeTriggerText: { fontSize: 14, fontWeight: "500", color: "#9CA3AF" },
+  timeTriggerText: { fontSize: 14, fontWeight: "500", color: "#A8A49C" },
   timeTriggerTextFilled: { color: "#000", fontWeight: "600" },
-  timeError: { fontSize: 12, color: "#EF4444", marginTop: 6 },
+  timeError: { fontSize: 12, color: "#D0341A", marginTop: 6 },
 
   sliderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
   sliderValueBadge: { backgroundColor: "#000", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
   sliderValueText: { color: "#FFF", fontWeight: "800", fontSize: 14 },
   slider: { width: "100%", height: 40 },
   sliderTicks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4, marginTop: -4 },
-  sliderTick: { fontSize: 11, color: "#9CA3AF", fontWeight: "500" },
+  sliderTick: { fontSize: 11, color: "#A8A49C", fontWeight: "500" },
 
   priceRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   priceDollar: { fontSize: 18, fontWeight: "700", color: "#000" },
   freeBtn: { marginTop: 8 },
-  freeBtnText: { fontSize: 13, color: "#6B7280", fontWeight: "600" },
+  freeBtnText: { fontSize: 13, color: "#7D7A73", fontWeight: "600" },
 
   footer: {
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#E5E7EB",
+    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   submitBtn: { backgroundColor: "#000", paddingVertical: 18, borderRadius: 14, alignItems: "center" },
   submitBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16, letterSpacing: 0.5 },
@@ -657,7 +657,7 @@ const modal = StyleSheet.create({
   },
   confirmText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
   cancelTouch: { paddingVertical: 6 },
-  cancelText: { color: "#9CA3AF", fontSize: 14, fontWeight: "600" },
+  cancelText: { color: "#A8A49C", fontSize: 14, fontWeight: "600" },
 
   dropdownCard: {
     backgroundColor: "#FFF", borderRadius: 16,
@@ -668,9 +668,9 @@ const modal = StyleSheet.create({
   dropdownItem: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingVertical: 15,
-    borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
   dropdownItemActive: { backgroundColor: "#000" },
-  dropdownItemText: { fontSize: 15, fontWeight: "500", color: "#374151" },
+  dropdownItemText: { fontSize: 15, fontWeight: "500", color: "#3A3833" },
   dropdownItemTextActive: { color: "#FFF", fontWeight: "700" },
 });

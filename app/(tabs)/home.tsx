@@ -41,9 +41,9 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   title: { fontSize: 32, fontWeight: '800', color: '#000' },
   subtitle: { fontSize: 16, color: '#666', marginTop: 10, marginBottom: 40 },
-  card: { backgroundColor: '#F3F4F6', padding: 20, borderRadius: 15, width: '100%', alignItems: 'center', marginBottom: 20 },
-  label: { fontSize: 12, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 },
+  card: { backgroundColor: '#F5F3EF', padding: 20, borderRadius: 15, width: '100%', alignItems: 'center', marginBottom: 20 },
+  label: { fontSize: 12, color: '#A8A49C', textTransform: 'uppercase', letterSpacing: 1 },
   emailText: { fontSize: 18, fontWeight: '600', color: '#000', marginTop: 5 },
   signOutButton: { marginTop: 20, padding: 10 },
-  signOutText: { color: '#FF3B30', fontWeight: '600', fontSize: 16 }
+  signOutText: { color: '#D0341A', fontWeight: '600', fontSize: 16 }
 });
