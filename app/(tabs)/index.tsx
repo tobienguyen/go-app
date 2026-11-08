@@ -46,7 +46,7 @@ export default function HomeScreen() {
         </View>
 
         <Text style={styles.mission}>
-          Pickup volleyball lives in a dozen group chats. GO! puts every game on one map, so you
+          Pickup volleyball, made accessible and affordable. GO! puts every game on one map, so you
           can see who's playing, where, and when, and just show up.
         </Text>
 
