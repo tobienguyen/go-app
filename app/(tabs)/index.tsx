@@ -360,7 +360,7 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/logo-mark.png")}
             style={styles.headerLogo}
             resizeMode="contain"
             accessibilityLabel="GO!"
