@@ -18,6 +18,8 @@ const POSES = [
 ];
 // Which pose shows at each point of the leap (0 = takeoff, 1 = landed)
 const POSE_WINDOWS: [number, number][] = [[0, 0.45], [0.45, 0.8], [0.8, 1.01]];
+// How much of the leap each pose change takes to blend in (instead of a hard cut)
+const POSE_FADE = 0.12;
 // The intro canvas is a bit larger than the logo's (room for the tails), so
 // scale it up to keep the ball the same size on screen.
 const CANVAS_SCALE = 555 / 489;
@@ -59,7 +61,7 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
       // fox leaps in from the left and lands on the ball
       Animated.parallel([
         Animated.timing(foxOpacity, { toValue: 1, duration: 160, useNativeDriver: true }),
-        Animated.timing(leap, { toValue: 1, duration: 1750, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(leap, { toValue: 1, duration: 2200, easing: Easing.linear, useNativeDriver: true }),
       ]),
       // little "landed" bounce of the whole logo
       Animated.sequence([
@@ -102,12 +104,20 @@ export function FoxIntro({ onDone }: { onDone: () => void }) {
           ))}
           {POSES.map((src, i) => {
             const [from, to] = POSE_WINDOWS[i];
-            // hard cut between poses, like a flipbook
-            const visible = leap.interpolate({
-              inputRange: [-1, from - 0.0001, from, to - 0.0001, to, 2],
-              outputRange: [0, 0, 1, 1, 0, 0],
-              extrapolate: "clamp",
-            });
+            // Each new pose fades in on top while the previous one stays fully
+            // visible underneath, then the old one drops out. The bodies line up,
+            // so only the tails and legs visibly blend and the body never dims.
+            const visible = i === 0
+              ? leap.interpolate({
+                  inputRange: [-1, to - 0.0001, to, 2],
+                  outputRange: [1, 1, 0, 0],
+                  extrapolate: "clamp",
+                })
+              : leap.interpolate({
+                  inputRange: [-1, from - POSE_FADE, from, to - 0.0001, to, 2],
+                  outputRange: [0, 0, 1, 1, 0, 0],
+                  extrapolate: "clamp",
+                });
             return (
               <Animated.Image
                 key={i}
