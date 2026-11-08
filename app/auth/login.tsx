@@ -95,7 +95,7 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <View style={styles.logoHeader}>
         <Text style={styles.logoTextBold}>
-          Go<Text style={styles.logoTextItalic}>!</Text>
+          GO<Text style={styles.logoTextItalic}>!</Text>
         </Text>
       </View>
 
