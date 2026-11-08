@@ -74,7 +74,7 @@ export default function SessionDetailScreen() {
           <View style={{ width: 40 }} />
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ color: "#A8A49C", fontSize: 16 }}>Session not found.</Text>
+          <Text style={{ color: "#A8A49C", fontSize: 18 }}>Session not found.</Text>
         </View>
       </SafeAreaView>
     );
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontFamily: F.w800, fontSize: 18, color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 20, color: "#000" },
   scroll: { paddingBottom: 100 },
   mapWrapper: { height: 220, position: "relative" },
   map: { ...StyleSheet.absoluteFillObject },
@@ -246,19 +246,19 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 6,
   },
   scene: { marginBottom: 12 },
-  typeBadgeText: { fontFamily: F.w800, color: "#111111", fontSize: 13, letterSpacing: 0.5 },
+  typeBadgeText: { fontFamily: F.w800, color: "#111111", fontSize: 15, letterSpacing: 0.5 },
   content: { padding: 16, gap: 14 },
-  title: { fontFamily: F.w800, fontSize: 24, color: "#000", lineHeight: 30 },
+  title: { fontFamily: F.w800, fontSize: 27, color: "#000", lineHeight: 34 },
   hostRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  hostText: { fontFamily: F.w500, fontSize: 14, color: "#7D7A73", },
+  hostText: { fontFamily: F.w500, fontSize: 16, color: "#7D7A73", },
   spotsCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   spotsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  spotsLeft: { fontFamily: F.w700, fontSize: 16, },
-  spotsFraction: { fontFamily: F.w500, fontSize: 13, color: "#A8A49C", },
+  spotsLeft: { fontFamily: F.w700, fontSize: 18, },
+  spotsFraction: { fontFamily: F.w500, fontSize: 15, color: "#A8A49C", },
   progressTrack: {
     height: 8, backgroundColor: "#F5F3EF", borderRadius: 4, overflow: "hidden",
   },
@@ -271,15 +271,15 @@ const styles = StyleSheet.create({
   },
   detailRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   detailIcon: { marginTop: 2 },
-  detailLabel: { fontFamily: F.w600, fontSize: 11, color: "#A8A49C", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  detailValue: { fontFamily: F.w600, fontSize: 15, color: "#111111", },
+  detailLabel: { fontFamily: F.w600, fontSize: 12, color: "#A8A49C", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  detailValue: { fontFamily: F.w600, fontSize: 17, color: "#111111", },
   descriptionCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
     shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  descriptionLabel: { fontFamily: F.w700, fontSize: 13, color: "#000", marginBottom: 8 },
-  descriptionText: { fontFamily: F.w400, fontSize: 15, color: "#3A3833", lineHeight: 22 },
+  descriptionLabel: { fontFamily: F.w700, fontSize: 15, color: "#000", marginBottom: 8 },
+  descriptionText: { fontFamily: F.w400, fontSize: 17, color: "#3A3833", lineHeight: 25 },
   footer: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#ECE9E3",
   },
   footerPrice: {},
-  footerPriceValue: { fontFamily: F.w800, fontSize: 22, color: "#000" },
-  footerPriceSub: { fontFamily: F.w500, fontSize: 12, color: "#A8A49C", },
+  footerPriceValue: { fontFamily: F.w800, fontSize: 25, color: "#000" },
+  footerPriceSub: { fontFamily: F.w500, fontSize: 13, color: "#A8A49C", },
   joinBtn: {
     backgroundColor: "#000", paddingHorizontal: 32, paddingVertical: 14,
     borderRadius: 14,
   },
   joinBtnFull: { backgroundColor: "#A8A49C" },
   joinBtnJoined: { backgroundColor: "#D0341A" },
-  joinBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 16 },
+  joinBtnText: { fontFamily: F.w800, color: "#FFF", fontSize: 18 },
 });

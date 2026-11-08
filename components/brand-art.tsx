@@ -19,6 +19,7 @@ export const COURT_PINS: Record<string, any> = {
 export const TAB_ICONS = {
   home: require("../assets/images/brand/tab-home.png"),
   map: require("../assets/images/brand/tab-map.png"),
+  browse: require("../assets/images/brand/tab-browse.png"),
   leaderboard: require("../assets/images/brand/tab-leaderboard.png"),
   profile: require("../assets/images/brand/tab-profile.png"),
 };
@@ -102,5 +103,5 @@ const styles = StyleSheet.create({
   tabIconIdle: { opacity: 0.35 },
   tabDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#D0341A", marginTop: 3 },
   spotsRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 3 },
-  more: { fontFamily: F.w700, fontSize: 12, color: "#7D7A73", marginLeft: 4 },
+  more: { fontFamily: F.w700, fontSize: 13, color: "#7D7A73", marginLeft: 4 },
 });

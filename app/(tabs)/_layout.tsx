@@ -9,7 +9,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#A8A49C',
-        tabBarLabelStyle: { fontSize: 11, fontFamily: F.w700 },
+        tabBarLabelStyle: { fontSize: 12, fontFamily: F.w700 },
         tabBarStyle: {
           height: 88,
           paddingTop: 6,
@@ -24,6 +24,13 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.home} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="browse"
+        options={{
+          title: 'Browse',
+          tabBarIcon: ({ focused }) => <TabIcon source={TAB_ICONS.browse} focused={focused} />,
         }}
       />
       <Tabs.Screen

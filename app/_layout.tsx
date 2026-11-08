@@ -6,11 +6,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 import { ensureMyProfile } from "../services/users";
 import 'react-native-reanimated';
-import {
-  useFonts,
-  Nunito_400Regular, Nunito_500Medium, Nunito_600SemiBold,
-  Nunito_700Bold, Nunito_800ExtraBold, Nunito_900Black,
-} from '@expo-google-fonts/nunito';
+import { useFonts, Gaegu_400Regular, Gaegu_700Bold } from '@expo-google-fonts/gaegu';
 
 import { useColorScheme } from 'react-native';
 
@@ -18,10 +14,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [fontsLoaded] = useFonts({
-    Nunito_400Regular, Nunito_500Medium, Nunito_600SemiBold,
-    Nunito_700Bold, Nunito_800ExtraBold, Nunito_900Black,
-  });
+  const [fontsLoaded] = useFonts({ Gaegu_400Regular, Gaegu_700Bold });
   const segments = useSegments();
   const router = useRouter();
 

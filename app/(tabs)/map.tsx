@@ -6,7 +6,7 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Session } from "../../types";
 import { subscribeSessions } from "../../services/sessions";
 import { askGo } from "../../services/insights";
@@ -63,6 +63,12 @@ export default function MapScreen() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [courtFilter, setCourtFilter] = useState<CourtFilter>("all");
+  const params = useLocalSearchParams<{ courtType?: string }>();
+  useEffect(() => {
+    if (params.courtType && ["beach", "grass", "indoor"].includes(params.courtType)) {
+      setCourtFilter(params.courtType as CourtFilter);
+    }
+  }, [params.courtType]);
   const [dayFilter, setDayFilter] = useState<Date | null>(null);
   const [dayDropdownOpen, setDayDropdownOpen] = useState(false);
   const [courtDropdownOpen, setCourtDropdownOpen] = useState(false);
@@ -438,7 +444,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#ECE9E3",
   },
-  headerTitle: { fontFamily: F.w800, fontSize: 20, color: "#000" },
+  headerTitle: { fontFamily: F.w800, fontSize: 22, color: "#000" },
   addBtn: {
     backgroundColor: "#000", width: 34, height: 34, borderRadius: 17,
     justifyContent: "center", alignItems: "center",
@@ -456,17 +462,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12,
     backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#ECE9E3",
   },
-  askInput: { fontFamily: F.w400, flex: 1, paddingVertical: 10, fontSize: 14, color: "#000" },
+  askInput: { fontFamily: F.w400, flex: 1, paddingVertical: 10, fontSize: 16, color: "#000" },
   askExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
   askChip: { backgroundColor: "#FFF", borderRadius: 16, borderWidth: 1, borderColor: "#ECE9E3", paddingHorizontal: 10, paddingVertical: 6 },
-  askChipText: { fontFamily: F.w400, fontSize: 12, color: "#3A3833" },
+  askChipText: { fontFamily: F.w400, fontSize: 13, color: "#3A3833" },
   aiBanner: {
     flexDirection: "row", alignItems: "center", gap: 10,
     marginHorizontal: 12, marginBottom: 8, padding: 10,
     backgroundColor: "#000", borderRadius: 10,
   },
-  aiBannerText: { fontFamily: F.w600, flex: 1, color: "#FFF", fontSize: 13, },
-  aiBannerClear: { fontFamily: F.w700, color: "#A8A49C", fontSize: 12, },
+  aiBannerText: { fontFamily: F.w600, flex: 1, color: "#FFF", fontSize: 15, },
+  aiBannerClear: { fontFamily: F.w700, color: "#A8A49C", fontSize: 13, },
   pin: {
     width: 38, height: 38, borderRadius: 19,
     justifyContent: "center", alignItems: "center",
@@ -475,7 +481,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
   pinSelected: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: "#D0341A" },
-  pinText: { fontFamily: F.w400, fontSize: 16 },
+  pinText: { fontFamily: F.w400, fontSize: 18 },
 
   filterBar: {
     flexDirection: "row", alignItems: "center",
@@ -493,7 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
   dropdownTriggerActive: { backgroundColor: "#000", borderColor: "#000" },
-  dropdownTriggerText: { fontFamily: F.w600, fontSize: 13, color: "#3A3833" },
+  dropdownTriggerText: { fontFamily: F.w600, fontSize: 15, color: "#3A3833" },
   dropdownTriggerTextActive: { color: "#FFF" },
   dropdownMenu: {
     position: "absolute", top: 38, left: 0,
@@ -508,9 +514,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#F5F3EF",
   },
   dropdownItemActive: { backgroundColor: "#F5F3EF" },
-  dropdownItemText: { fontFamily: F.w500, fontSize: 14, color: "#3A3833" },
+  dropdownItemText: { fontFamily: F.w500, fontSize: 16, color: "#3A3833" },
   dropdownItemTextActive: { fontFamily: F.w700, color: "#000" },
-  filterCount: { fontFamily: F.w500, marginLeft: "auto", fontSize: 12, color: "#A8A49C", },
+  filterCount: { fontFamily: F.w500, marginLeft: "auto", fontSize: 13, color: "#A8A49C", },
 
   list: { padding: 12, gap: 10, paddingBottom: 30 },
   card: {
@@ -522,23 +528,23 @@ const styles = StyleSheet.create({
   cardSelected: { borderColor: "#000" },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   typeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
-  typeBadgeText: { fontFamily: F.w700, fontSize: 11, letterSpacing: 0.5 },
-  cardPrice: { fontFamily: F.w700, fontSize: 14, color: "#000" },
-  cardTitle: { fontFamily: F.w700, fontSize: 16, color: "#000", marginBottom: 8 },
+  typeBadgeText: { fontFamily: F.w700, fontSize: 12, letterSpacing: 0.5 },
+  cardPrice: { fontFamily: F.w700, fontSize: 16, color: "#000" },
+  cardTitle: { fontFamily: F.w700, fontSize: 18, color: "#000", marginBottom: 8 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
-  cardMeta: { fontFamily: F.w400, fontSize: 13, color: "#7D7A73", flex: 1 },
+  cardMeta: { fontFamily: F.w400, fontSize: 15, color: "#7D7A73", flex: 1 },
   cardBottom: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F5F3EF",
   },
-  spotsText: { fontFamily: F.w700, fontSize: 13, },
-  spotsTotal: { fontFamily: F.w400, fontSize: 11, color: "#A8A49C", marginTop: 2 },
+  spotsText: { fontFamily: F.w700, fontSize: 15, },
+  spotsTotal: { fontFamily: F.w400, fontSize: 12, color: "#A8A49C", marginTop: 2 },
   joinBtn: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 9, borderRadius: 10 },
-  joinBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 14 },
+  joinBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 16 },
   emptyState: { alignItems: "center", paddingVertical: 60, paddingHorizontal: 20 },
-  emptyEmoji: { fontFamily: F.w400, fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontFamily: F.w700, fontSize: 18, color: "#000", marginBottom: 6 },
-  emptySubtitle: { fontFamily: F.w400, fontSize: 14, color: "#A8A49C", marginBottom: 20 },
+  emptyEmoji: { fontFamily: F.w400, fontSize: 54, marginBottom: 12 },
+  emptyTitle: { fontFamily: F.w700, fontSize: 20, color: "#000", marginBottom: 6 },
+  emptySubtitle: { fontFamily: F.w400, fontSize: 16, color: "#A8A49C", marginBottom: 20 },
   emptyBtn: { backgroundColor: "#000", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  emptyBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 15 },
+  emptyBtnText: { fontFamily: F.w700, color: "#FFF", fontSize: 17 },
 });

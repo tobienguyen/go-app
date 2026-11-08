@@ -158,23 +158,23 @@ const styles = StyleSheet.create({
   content: { width: "100%", paddingHorizontal: 30 },
   pageSubtitle: {
     fontFamily: F.w600,
-    fontSize: 12, color: "#666666", textAlign: "center",
+    fontSize: 13, color: "#666666", textAlign: "center",
     marginBottom: 25, letterSpacing: 2,
   },
   input: {
     fontFamily: F.w400,
     backgroundColor: "#F5F3EF", color: "#000", padding: 16,
-    borderRadius: 12, fontSize: 16, marginBottom: 16,
+    borderRadius: 12, fontSize: 18, marginBottom: 16,
     borderWidth: 1, borderColor: "#ECE9E3",
   },
   button: {
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", height: 60, justifyContent: "center",
   },
-  buttonText: { fontFamily: F.w800, color: "#FFF", fontSize: 16, letterSpacing: 1 },
+  buttonText: { fontFamily: F.w800, color: "#FFF", fontSize: 18, letterSpacing: 1 },
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#ECE9E3" },
-  dividerText: { fontFamily: F.w700, color: "#A8A49C", paddingHorizontal: 10, fontSize: 12, },
+  dividerText: { fontFamily: F.w700, color: "#A8A49C", paddingHorizontal: 10, fontSize: 13, },
   socialButtons: { gap: 12 },
   socialButton: {
     backgroundColor: "#FFF", padding: 16, borderRadius: 12,
@@ -182,5 +182,5 @@ const styles = StyleSheet.create({
   },
   socialButtonContent: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   icon: { marginRight: 10 },
-  socialButtonText: { fontFamily: F.w600, color: "#000", fontSize: 15 },
+  socialButtonText: { fontFamily: F.w600, color: "#000", fontSize: 17 },
 });

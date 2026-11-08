@@ -104,7 +104,7 @@ export default function SignupDetails() {
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={{ fontSize: 12, color: "#A8A49C", marginTop: 8 }}>
+        <Text style={{ fontSize: 13, color: "#A8A49C", marginTop: 8 }}>
           You can change this anytime in your profile.
         </Text>
 
@@ -122,14 +122,14 @@ export default function SignupDetails() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
   header: { padding: 30, marginTop: 20 },
-  title: { fontFamily: F.w800, fontSize: 28, color: "#000" },
-  subtitle: { fontFamily: F.w400, fontSize: 14, color: "#666", marginTop: 5 },
+  title: { fontFamily: F.w800, fontSize: 31, color: "#000" },
+  subtitle: { fontFamily: F.w400, fontSize: 16, color: "#666", marginTop: 5 },
   form: { paddingHorizontal: 30 },
-  label: { fontFamily: F.w600, fontSize: 14, color: "#000", marginBottom: 8, marginTop: 15 },
+  label: { fontFamily: F.w600, fontSize: 16, color: "#000", marginBottom: 8, marginTop: 15 },
   input: {
     fontFamily: F.w400,
     backgroundColor: "#F5F3EF", padding: 16, borderRadius: 12,
-    fontSize: 16, borderWidth: 1, borderColor: "#ECE9E3", color: "#000",
+    fontSize: 18, borderWidth: 1, borderColor: "#ECE9E3", color: "#000",
   },
   skillContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 5, gap: 8 },
   skillBtn: {
@@ -143,5 +143,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#000", padding: 18, borderRadius: 12,
     alignItems: "center", marginTop: 40, height: 60, justifyContent: "center",
   },
-  mainButtonText: { fontFamily: F.w700, color: "#FFF", fontSize: 16 },
+  mainButtonText: { fontFamily: F.w700, color: "#FFF", fontSize: 18 },
 });
